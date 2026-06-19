@@ -133,11 +133,11 @@ if __name__ == "__main__":
             torch.save(vanilla_model.state_dict(), "results/vanilla_dqn.pt")
             torch.save(kg_model.state_dict(), "results/kg_dqn.pt")
 
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 90)
     print(f"MULTI-SEED SUMMARY  ({len(SEEDS)} seeds: {SEEDS})")
-    print("=" * 70)
+    print("=" * 90)
     print(f"{'Agent':<16} {'Accuracy (mean ± std)':>26} {'Violation rate (mean ± std)':>30}")
-    print("-" * 70)
+    print("-" * 90)
     print(f"{'Vanilla DQN':<16} "
           f"{np.mean(van_accs)*100:>8.1f}% ± {np.std(van_accs)*100:<5.1f}%        "
           f"{np.mean(van_viols)*100:>8.1f}% ± {np.std(van_viols)*100:<5.1f}%")

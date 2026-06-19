@@ -203,11 +203,13 @@ Tests the Gymnasium environment itself: correct observation shape, correct actio
 A **quick, single-seed** end-to-end smoke test: trains both a random agent and both DQN variants once, prints a summary comparison table, and saves one comparison figure. This is meant for fast iteration during development — not the numbers reported in the paper.
 
 **📸 Terminal output of `tests_dqn.py`, the final summary table + convergence section**
-![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
+![Terminal output of tests_dqn.py](terminal_outputs/tests_dqn_summary.png)
 
 **What the output means:** the summary table compares four agents (Random, Random+KG, Vanilla DQN, KG-DQN) across Reward, Correct%, and Violations. The key thing to look for: **KG-DQN's Violations column should always read exactly 0**, regardless of training quality — this is the masking guarantee, visible from the very first run. The "Convergence to 80% correct tagging" section reports which training episode each agent first crossed 80% accuracy — useful for the training-dynamics figure, but not the paper's headline safety/accuracy numbers, which come from `tests_robustness.py` instead.
 
-**📸 [SCREENSHOT 5 GOES HERE — the `results/full_comparison.png` figure this script generates]**
+**📸 [The `results/full_comparison.png` figure this script generates]**
+![Terminal output of tests_dqn.py](results\full_comparison.png)
+
 
 **What this figure means:** four panels, left to right — episode reward over training, correct-tag rate over training, KG violations per episode (Vanilla descends slowly but never reaches zero; KG-DQN is flat at zero from the start), and the gap between raw accuracy and KG-agreement rate (reflecting the 15% noisy-label patients in the training data).
 
@@ -226,27 +228,25 @@ After all three seeds, it reports the **multi-seed summary** (mean ± standard d
 
 This takes the longest to run of anything in this repo, since it trains 6 full models total (2 agents × 3 seeds) plus the extra budget re-evaluation.
 
-**📸 [SCREENSHOT 6 GOES HERE — terminal output: the three "SEED" training blocks]**
+**📸 Terminal output: the "MULTI-SEED SUMMARY" table**
+![Terminal output of tests_robustness.py](terminal_outputs\tests_robustness_Seedsummary.png)
 
-**What this output means:** for each seed, you'll see two long blocks of `EP N | Reward: ... | Correct: ... | KG-agree: ... | Violations: ... | Eps: ... | Exhaustive-acc: ... (viol ...)` lines — one block for Vanilla, one for KG-DQN. The `Exhaustive-acc` and `(viol ...)` numbers are the trustworthy ones (checked against all 80 profiles every 20 episodes); the `Correct`/`Violations` numbers earlier in the line are noisier, since they're from just that one 10-patient episode. **Critically, KG-DQN's `Violations` column reads `0` on literally every single line, from episode 0 onward** — this is not something it learned, it's a structural guarantee of the masking. Each seed block ends with `Saved BEST checkpoint (exhaustive 80-profile accuracy X.XX) to results/...pt` — confirming the script kept the best-performing snapshot across all 26 checkpoints it evaluated, not just whatever existed when training happened to stop.
-
-**📸 [SCREENSHOT 7 GOES HERE — terminal output: the "MULTI-SEED SUMMARY" table]**
 
 **What this output means:** this table is the paper's Table 1. It reports, across the three seeds, mean ± standard deviation accuracy and violation rate for both agents. **KG-DQN's violation rate should read `0.0% ± 0.0%`** — zero average, zero spread, because it's mathematically guaranteed rather than empirically observed. Vanilla's numbers will have real variance — this is expected and is itself part of the point: an unconstrained agent's safety is incidental to how training happened to go, not guaranteed.
 
-**📸 [SCREENSHOT 8 GOES HERE — terminal output: the "Vanilla DQN failure cases" and "KG-DQN failure cases" listings]**
+**📸 Terminal output: the "Vanilla DQN failure cases" and "KG-DQN failure cases" listings**
+![Terminal output of tests_robustness.py](terminal_outputs\tests_robustness_vanillaDQN_failurecases.png)
+![Terminal output of tests_robustness.py](terminal_outputs\tests_robustness_KGDQN_failurecases.png)
 
-**What this output means:** this is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are, e.g. `p=0.0014`, confirming these are genuinely the rarest cases). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake. For KG-DQN, look for `final_tag=None` — this means the agent ran out of its 4-action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag failures, since no forbidden action was ever taken.
+**What this output means:** this is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are, e.g. `p=0.0014`, confirming these are genuinely the rarest cases). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake. For KG-DQN, look for `final_tag=None` — this means the agent ran out of its 4-action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag failures, since no forbidden action was ever taken. For each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid. This is your explainability evidence — instead of saying "the agent stalled," you can point to the exact sequence (e.g., repeatedly selecting `open_airway` after it already took effect once, paying a redundancy penalty, then running out of budget) and explain precisely why it failed.
 
-**📸 [SCREENSHOT 9 GOES HERE — terminal output: the full action-by-action traces for KG-DQN's failures]**
+**📸 Terminal output: the "Budget-sensitivity check" section**
+![Terminal output of tests_robustness.py](terminal_outputs\tests_robustness_budget_check.png)
 
-**What this output means:** for each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid. This is your explainability evidence — instead of saying "the agent stalled," you can point to the exact sequence (e.g., repeatedly selecting `open_airway` after it already took effect once, paying a redundancy penalty, then running out of budget) and explain precisely why it failed.
-
-**📸 [SCREENSHOT 10 GOES HERE — terminal output: the "Budget-sensitivity check" section]**
 
 **What this output means:** this re-tests the *same already-trained* KG-DQN model (no retraining at all) with double the action budget, to check if more "thinking time" alone would have fixed the failures above. The conclusion line at the end tells you the verdict directly: `0/N previously-failing profiles became correct purely from a larger action budget` means the problem is a genuine gap in what the model learned, not just an unfairly tight time limit.
 
-**📸 [SCREENSHOT 11 GOES HERE — the `results/robustness_stress_test.png` figure]**
+**📸 [The `results/robustness_stress_test.png` figure]**
 
 **What this figure means:** two panels. Left: correctness as a function of how rare a patient profile is (rarest on the left) — both agents tend to dip on the rarest profiles. Right: violation rate as a function of rarity — **KG-DQN's line should be flat at zero across the entire plot**, while Vanilla's line rises specifically in the rare region. This is the clearest single visual proof that the safety guarantee holds everywhere, not just on average.
 
@@ -274,25 +274,6 @@ After running `tests_robustness.py`, your `results/` folder will contain:
 | `full_comparison.png` | The training-dynamics figure from `tests_dqn.py` (Figure 2 in the paper) |
 
 These CSVs and PNGs are what's referenced in the paper's acknowledgments section as supporting evidence for every reported number.
-
----
-
-## Citing this work
-
-If you use this code or ontology, please cite:
-
-```bibtex
-@inproceedings{fatima2026kgdqn,
-  author    = {Fatima, Maham and Tolg, Boris},
-  title     = {A Triage Ontology-Guided Knowledge Graph for Constraining
-               Reinforcement Learning Decisions in Mass Casualty Incidents},
-  booktitle = {Proceedings of the 3rd International Workshop on Knowledge
-               Graphs and Neurosymbolic AI (KG-NeSy 2026), co-located with
-               ISWC 2026},
-  year      = {2026},
-  address   = {Bari, Italy}
-}
-```
 
 ---
 
