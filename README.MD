@@ -163,10 +163,9 @@ The training loop. Standard epsilon-greedy DQN with a target network. The one im
 
 Eight isolated unit tests confirming the ontology + reasoner correctly encode each START rule and the CBRN decontamination rule, with no RL agent involved at all — pure symbolic logic checks.
 
-**📸 Terminal output of `tests_kg.py`**
-
 ![Terminal output of tests_kg.py](terminal_outputs/tests_kg.png)
-**What the output means:** each line printed is `PASS scenario N: <description>`, ending in `All 8 scenarios passed.` Every `PASS` confirms one specific clinical rule is being enforced correctly by the reasoner — for example, "ambulatory patient" confirms a walking patient can only be tagged Minor, and "CBRN Rule 5" confirms `treat` is blocked on a contaminated patient until decontamination completes. If any line says `FAIL` instead of `PASS`, or the script crashes with an `AssertionError`, it means the ontology itself has a logical inconsistency — this must be fixed before trusting any later result, since every other file in this repo depends on this file's correctness.
+
+Each line printed is `PASS scenario N: <description>`, ending in `All 8 scenarios passed.` Every `PASS` confirms one specific clinical rule is being enforced correctly by the reasoner — for example, "ambulatory patient" confirms a walking patient can only be tagged Minor, and "CBRN Rule 5" confirms `treat` is blocked on a contaminated patient until decontamination completes. If any line says `FAIL` instead of `PASS`, or the script crashes with an `AssertionError`, it means the ontology itself has a logical inconsistency — this must be fixed before trusting any later result, since every other file in this repo depends on this file's correctness.
 
 ---
 
@@ -176,10 +175,9 @@ Eight isolated unit tests confirming the ontology + reasoner correctly encode ea
 
 Confirms the CBRN hazard/decontamination-duration wiring specifically: that nuclear hazard requires 3 decontamination steps, chemical requires 1, that `treat` stays blocked until decontamination finishes and becomes valid immediately after, and that a patient with no assigned hazard type correctly falls back to a default duration.
 
-**📸 Terminal output of `tests_hazard.py`**
-
 ![Terminal output of tests_hazard.py](terminal_outputs/tests_hazard.png)
-**What the output means:** each printed line states an expected value and the actual computed value side by side (e.g., `Nuclear hazard decon duration: 3 (expect 3)`), followed by `All hazard-type wiring checks passed.` This confirms the multi-step decontamination mechanic — the part of this project that makes the CBRN extension genuinely sequential rather than a single static lookup — is working correctly end to end.
+
+Each printed line states an expected value and the actual computed value side by side (e.g., `Nuclear hazard decon duration: 3 (expect 3)`), followed by `All hazard-type wiring checks passed.` This confirms the multi-step decontamination mechanic — the part of this project that makes the CBRN extension genuinely sequential rather than a single static lookup — is working correctly end to end.
 
 ---
 
@@ -189,11 +187,9 @@ Confirms the CBRN hazard/decontamination-duration wiring specifically: that nucl
 
 Tests the Gymnasium environment itself: correct observation shape, correct action-space size, that the KG-constrained mode actually blocks wrong actions (re-confirming `tests_kg.py`'s findings, but now through the environment rather than the ontology layer directly), and a full multi-step decontaminate-then-treat sequence.
 
-**📸 Terminal output of `tests_env.py`**
-
 ![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
 
-**What the output means:** look for `Episode done: N raw env.step() calls for 10 patients` — this confirms a full 10-patient episode completes correctly. The `Valid action mask: [...]` line shows the actual boolean array of which of the 7 actions are currently allowed for one patient. `Ambulatory patient tagged Immediate → reward: -50.0` confirms that, exactly as expected, the KG penalty fires when the environment is asked to do something the ontology forbids. The decontamination-flow section at the end shows `decontaminated` flipping from `False` to `True` exactly when the required number of decontaminate actions accumulates, and `progress` climbing from 0.0 to 1.0 — confirming the multi-step CBRN mechanic works correctly inside the actual environment, not just in isolated logic.
+Look for `Episode done: N raw env.step() calls for 10 patients` — this confirms a full 10-patient episode completes correctly. The `Valid action mask: [...]` line shows the actual boolean array of which of the 7 actions are currently allowed for one patient. `Ambulatory patient tagged Immediate → reward: -50.0` confirms that, exactly as expected, the KG penalty fires when the environment is asked to do something the ontology forbids. The decontamination-flow section at the end shows `decontaminated` flipping from `False` to `True` exactly when the required number of decontaminate actions accumulates, and `progress` climbing from 0.0 to 1.0 — confirming the multi-step CBRN mechanic works correctly inside the actual environment, not just in isolated logic.
 
 ---
 
@@ -203,18 +199,13 @@ Tests the Gymnasium environment itself: correct observation shape, correct actio
 
 A **quick, single-seed** end-to-end smoke test: trains both a random agent and both DQN variants once, prints a summary comparison table, and saves one comparison figure. This is meant for fast iteration during development — not the numbers reported in the paper.
 
-**📸 Terminal output of `tests_dqn.py`, the final summary table + convergence section**
-
 ![Terminal output of tests_dqn.py](terminal_outputs/tests_dqn_summary.png)
 
-**What the output means:** the summary table compares four agents (Random, Random+KG, Vanilla DQN, KG-DQN) across Reward, Correct%, and Violations. The key thing to look for: **KG-DQN's Violations column should always read exactly 0**, regardless of training quality — this is the masking guarantee, visible from the very first run. The "Convergence to 80% correct tagging" section reports which training episode each agent first crossed 80% accuracy — useful for the training-dynamics figure, but not the paper's headline safety/accuracy numbers, which come from `tests_robustness.py` instead.
-
-**📸 [The `results/full_comparison.png` figure this script generates]**
+The summary table compares four agents (Random, Random+KG, Vanilla DQN, KG-DQN) across Reward, Correct%, and Violations. The key thing to look for: **KG-DQN's Violations column should always read exactly 0**, regardless of training quality — this is the masking guarantee, visible from the very first run. The "Convergence to 80% correct tagging" section reports which training episode each agent first crossed 80% accuracy — useful for the training-dynamics figure, but not the paper's headline safety/accuracy numbers, which come from `tests_robustness.py` instead.
 
 ![Terminal output of tests_dqn.py](results/full_comparison.png)
 
-
-**What this figure means:** four panels, left to right — episode reward over training, correct-tag rate over training, KG violations per episode (Vanilla descends slowly but never reaches zero; KG-DQN is flat at zero from the start), and the gap between raw accuracy and KG-agreement rate (reflecting the 15% noisy-label patients in the training data).
+Four panels, left to right — episode reward over training, correct-tag rate over training, KG violations per episode (Vanilla descends slowly but never reaches zero; KG-DQN is flat at zero from the start), and the gap between raw accuracy and KG-agreement rate (reflecting the 15% noisy-label patients in the training data).
 
 ---
 
@@ -231,33 +222,23 @@ After all three seeds, it reports the **multi-seed summary** (mean ± standard d
 
 This takes the longest to run of anything in this repo, since it trains 6 full models total (2 agents × 3 seeds) plus the extra budget re-evaluation.
 
-**📸 Terminal output: the "MULTI-SEED SUMMARY" table**
-
 ![Terminal output of tests_robustness.py](terminal_outputs/tests_robustness_Seedsummary.png)
 
-
-**What this output means:** this table is the paper's Table 1. It reports, across the three seeds, mean ± standard deviation accuracy and violation rate for both agents. **KG-DQN's violation rate should read `0.0% ± 0.0%`** — zero average, zero spread, because it's mathematically guaranteed rather than empirically observed. Vanilla's numbers will have real variance — this is expected and is itself part of the point: an unconstrained agent's safety is incidental to how training happened to go, not guaranteed.
-
-**📸 Terminal output: the "Vanilla DQN failure cases" and "KG-DQN failure cases" listings**
+This table is the paper's Table 1. It reports, across the three seeds, mean ± standard deviation accuracy and violation rate for both agents. **KG-DQN's violation rate should read `0.0% ± 0.0%`** — zero average, zero spread, because it's mathematically guaranteed rather than empirically observed. Vanilla's numbers will have real variance — this is expected and is itself part of the point: an unconstrained agent's safety is incidental to how training happened to go, not guaranteed.
 
 ![Terminal output of tests_robustness.py](terminal_outputs/tests_dqn_summary.pngtests_robustness_vanillaDQN_failurecases.png)
 ![Terminal output of tests_robustness.py](terminal_outputs/tests_robustness_KGDQN_failurecases.png)
 
-**What this output means:** this is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are, e.g. `p=0.0014`, confirming these are genuinely the rarest cases). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake. For KG-DQN, look for `final_tag=None` — this means the agent ran out of its 4-action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag failures, since no forbidden action was ever taken. For each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid. This is your explainability evidence — instead of saying "the agent stalled," you can point to the exact sequence (e.g., repeatedly selecting `open_airway` after it already took effect once, paying a redundancy penalty, then running out of budget) and explain precisely why it failed.
-
-**📸 Terminal output: the "Budget-sensitivity check" section**
+This is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are, e.g. `p=0.0014`, confirming these are genuinely the rarest cases). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake. For KG-DQN, look for `final_tag=None` — this means the agent ran out of its 4-action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag failures, since no forbidden action was ever taken. For each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid. This is your explainability evidence — instead of saying "the agent stalled," you can point to the exact sequence (e.g., repeatedly selecting `open_airway` after it already took effect once, paying a redundancy penalty, then running out of budget) and explain precisely why it failed.
 
 ![Terminal output of tests_robustness.py](terminal_outputs/tests_robustness_budget_check.png)
 
+This re-tests the *same already-trained* KG-DQN model (no retraining at all) with double the action budget, to check if more "thinking time" alone would have fixed the failures above. The conclusion line at the end tells you the verdict directly: `0/N previously-failing profiles became correct purely from a larger action budget` means the problem is a genuine gap in what the model learned, not just an unfairly tight time limit.
 
-**What this output means:** this re-tests the *same already-trained* KG-DQN model (no retraining at all) with double the action budget, to check if more "thinking time" alone would have fixed the failures above. The conclusion line at the end tells you the verdict directly: `0/N previously-failing profiles became correct purely from a larger action budget` means the problem is a genuine gap in what the model learned, not just an unfairly tight time limit.
-
-**📸 [The `results/robustness_stress_test.png` figure]**
 
 ![Full Comparuion](results/robustness_stress_test.png)
 
-
-**What this figure means:** two panels. Left: correctness as a function of how rare a patient profile is (rarest on the left) — both agents tend to dip on the rarest profiles. Right: violation rate as a function of rarity — **KG-DQN's line should be flat at zero across the entire plot**, while Vanilla's line rises specifically in the rare region. This is the clearest single visual proof that the safety guarantee holds everywhere, not just on average.
+Two panels. Left: correctness as a function of how rare a patient profile is (rarest on the left) — both agents tend to dip on the rarest profiles. Right: violation rate as a function of rarity — **KG-DQN's line should be flat at zero across the entire plot**, while Vanilla's line rises specifically in the rare region. This is the clearest single visual proof that the safety guarantee holds everywhere, not just on average.
 
 ---
 
