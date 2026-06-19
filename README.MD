@@ -176,8 +176,9 @@ Eight isolated unit tests confirming the ontology + reasoner correctly encode ea
 
 Confirms the CBRN hazard/decontamination-duration wiring specifically: that nuclear hazard requires 3 decontamination steps, chemical requires 1, that `treat` stays blocked until decontamination finishes and becomes valid immediately after, and that a patient with no assigned hazard type correctly falls back to a default duration.
 
-**📸 [SCREENSHOT 2 GOES HERE — terminal output of `tests_hazard.py`]**
+**📸 Terminal output of `tests_hazard.py`**
 
+![Terminal output of tests_hazard.py](terminal_outputs/tests_hazard.png)
 **What the output means:** each printed line states an expected value and the actual computed value side by side (e.g., `Nuclear hazard decon duration: 3 (expect 3)`), followed by `All hazard-type wiring checks passed.` This confirms the multi-step decontamination mechanic — the part of this project that makes the CBRN extension genuinely sequential rather than a single static lookup — is working correctly end to end.
 
 ---
@@ -188,7 +189,8 @@ Confirms the CBRN hazard/decontamination-duration wiring specifically: that nucl
 
 Tests the Gymnasium environment itself: correct observation shape, correct action-space size, that the KG-constrained mode actually blocks wrong actions (re-confirming `tests_kg.py`'s findings, but now through the environment rather than the ontology layer directly), and a full multi-step decontaminate-then-treat sequence.
 
-**📸 [SCREENSHOT 3 GOES HERE — terminal output of `tests_env.py`]**
+**📸 Terminal output of `tests_env.py`**
+![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
 
 **What the output means:** look for `Episode done: N raw env.step() calls for 10 patients` — this confirms a full 10-patient episode completes correctly. The `Valid action mask: [...]` line shows the actual boolean array of which of the 7 actions are currently allowed for one patient. `Ambulatory patient tagged Immediate → reward: -50.0` confirms that, exactly as expected, the KG penalty fires when the environment is asked to do something the ontology forbids. The decontamination-flow section at the end shows `decontaminated` flipping from `False` to `True` exactly when the required number of decontaminate actions accumulates, and `progress` climbing from 0.0 to 1.0 — confirming the multi-step CBRN mechanic works correctly inside the actual environment, not just in isolated logic.
 
@@ -200,7 +202,8 @@ Tests the Gymnasium environment itself: correct observation shape, correct actio
 
 A **quick, single-seed** end-to-end smoke test: trains both a random agent and both DQN variants once, prints a summary comparison table, and saves one comparison figure. This is meant for fast iteration during development — not the numbers reported in the paper.
 
-**📸 [SCREENSHOT 4 GOES HERE — terminal output of `tests_dqn.py`, the final summary table + convergence section]**
+**📸 Terminal output of `tests_dqn.py`, the final summary table + convergence section**
+![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
 
 **What the output means:** the summary table compares four agents (Random, Random+KG, Vanilla DQN, KG-DQN) across Reward, Correct%, and Violations. The key thing to look for: **KG-DQN's Violations column should always read exactly 0**, regardless of training quality — this is the masking guarantee, visible from the very first run. The "Convergence to 80% correct tagging" section reports which training episode each agent first crossed 80% accuracy — useful for the training-dynamics figure, but not the paper's headline safety/accuracy numbers, which come from `tests_robustness.py` instead.
 
