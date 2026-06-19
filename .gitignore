@@ -6,6 +6,4 @@ src/kg/__pycache__/
 train/models/__pycache__/
 train/__pycache__/
 CHANGEOFLOG
-results
 results_before_oversampling
-terminal_outputs
