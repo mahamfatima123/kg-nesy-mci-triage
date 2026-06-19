@@ -163,8 +163,9 @@ The training loop. Standard epsilon-greedy DQN with a target network. The one im
 
 Eight isolated unit tests confirming the ontology + reasoner correctly encode each START rule and the CBRN decontamination rule, with no RL agent involved at all — pure symbolic logic checks.
 
-**📸 [ terminal_outputs/tests_kg.png — terminal output of `tests_kg.py`]**
+**📸 Terminal output of `tests_kg.py`**
 
+![Terminal output of tests_kg.py](terminal_outputs/tests_kg.png)
 **What the output means:** each line printed is `PASS scenario N: <description>`, ending in `All 8 scenarios passed.` Every `PASS` confirms one specific clinical rule is being enforced correctly by the reasoner — for example, "ambulatory patient" confirms a walking patient can only be tagged Minor, and "CBRN Rule 5" confirms `treat` is blocked on a contaminated patient until decontamination completes. If any line says `FAIL` instead of `PASS`, or the script crashes with an `AssertionError`, it means the ontology itself has a logical inconsistency — this must be fixed before trusting any later result, since every other file in this repo depends on this file's correctness.
 
 ---
