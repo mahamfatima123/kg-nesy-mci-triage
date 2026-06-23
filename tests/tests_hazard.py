@@ -20,7 +20,7 @@ def test_hazard_wiring():
                                 follows_commands=True, decontaminated=False,
                                 hazard_type="nuclear")
     duration = get_decontamination_duration(onto, p_nuclear)
-    print(f"Nuclear hazard decon duration: {duration} (expect 3)")
+    print(f"Nuclear hazard decontamination duration: {duration} (expect 3)")
     assert duration == 3, f"FAIL: expected 3, got {duration}"
 
     # Chemical hazard should require 1
@@ -29,7 +29,7 @@ def test_hazard_wiring():
                              follows_commands=True, decontaminated=False,
                              hazard_type="chemical")
     duration = get_decontamination_duration(onto, p_chem)
-    print(f"Chemical hazard decon duration: {duration} (expect 1)")
+    print(f"Chemical hazard decontamination duration: {duration} (expect 1)")
     assert duration == 1, f"FAIL: expected 1, got {duration}"
 
     # decontaminate should always be KG-valid, regardless of hazard/category
@@ -39,13 +39,13 @@ def test_hazard_wiring():
 
     # treat should be blocked before decontamination...
     valid, reason = check_action(onto, p_nuclear, ACTION_TREAT)
-    print(f"treat valid before decon: {valid} | {reason}")
+    print(f"treat valid before decontamination: {valid} | {reason}")
     assert not valid
 
     # ...and permitted after mark_decontaminated() flips the status
     mark_decontaminated(onto, p_nuclear)
     valid, reason = check_action(onto, p_nuclear, ACTION_TREAT)
-    print(f"treat valid after decon: {valid} | {reason}")
+    print(f"treat valid after decontamination: {valid} | {reason}")
     assert valid
 
     # A patient with no hazard_type at all should fall back to the default
