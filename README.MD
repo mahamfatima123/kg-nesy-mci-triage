@@ -271,9 +271,3 @@ After running `tests_robustness.py`, your `results/` folder will contain:
 | `full_comparison.png` | The training-dynamics figure from `tests_dqn.py` (Figure 2 in the paper) |
 
 These CSVs and PNGs are what's referenced in the paper's acknowledgments section as supporting evidence for every reported number.
-
----
-
-## Acknowledgments
-
-Developed as part of doctoral research at HAW Hamburg, Faculty of Life Sciences, in collaboration with ongoing work on AI-supported maritime CBRN emergency response.
