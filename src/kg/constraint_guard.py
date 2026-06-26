@@ -120,45 +120,72 @@ _TABLE_CACHE = {}
 
 
 def _build_lookup_table(owl_path: str):
+    """
+    Builds the reasoner-backed lookup table over a 6-dimensional profile:
+    (ambulatory, breathing, pulse, follows_commands, decontaminated,
+    tachypneic).
+ 
+    Tachypnea is asserted via hasRespiratoryRate (a representative value
+    of 35 for tachypneic profiles, 18 for non-tachypneic) rather than
+    directly asserting hasTachypneaStatus -- this means Pellet must
+    actually fire START_rule3b_tachypnea to derive the tachypnea fact,
+    and then START_rule3c_tachypnea_immediate to derive
+    treatmentRequired/hasSeverityScore from it. Both SWRL rules are
+    therefore genuinely exercised here, not bypassed.
+ 
+    A tachypneic-but-not-breathing profile is not clinically coherent
+    (you cannot have an elevated respiratory rate while not breathing at
+    all), so that combination is skipped rather than enumerated.
+    """
     onto = _load_ontology_raw(owl_path)
-
-    profiles = list(itertools.product([True, False], repeat=5))
+ 
+    profiles = list(itertools.product([True, False], repeat=6))
     individuals = {}
     with onto:
         for i, profile in enumerate(profiles):
-            amb, br, pulse, cmd, dec = profile
+            amb, br, pulse, cmd, dec, tachy = profile
+            if not br and tachy:
+                continue  # not breathing + tachypneic is incoherent; skip
             p = onto.Patient(f"_lut_p{i}")
-            p.hasAmbulationStatus = [onto.ambulatory if amb else onto.nonAmbulatory]
-            p.hasRespiratoryStatus = [onto.breathing if br else onto.notBreathing]
-            p.hasPulseStatus = [onto.pulsePresent if pulse else onto.pulseAbsent]
-            p.hasMentalStatus = [onto.followsCommands if cmd else onto.doesNotFollowCommands]
-            p.hasDecontaminationStatus = [
-                onto.decontaminated if dec else onto.notDecontaminated
-            ]
+            p.hasAmbulationStatus      = [onto.ambulatory      if amb   else onto.nonAmbulatory]
+            p.hasRespiratoryStatus     = [onto.breathing       if br    else onto.notBreathing]
+            p.hasPulseStatus           = [onto.pulsePresent    if pulse else onto.pulseAbsent]
+            p.hasMentalStatus          = [onto.followsCommands if cmd   else onto.doesNotFollowCommands]
+            p.hasDecontaminationStatus = [onto.decontaminated  if dec   else onto.notDecontaminated]
+            if br:
+                # Only assert a rate for breathing profiles -- this is
+                # what actually drives START_rule3b_tachypnea. 35 is
+                # comfortably > 30; 18 is comfortably <= 30.
+                p.hasRespiratoryRate = [35 if tachy else 18]
             individuals[profile] = p
-
-        # infer_property_values fires SWRL atoms with object-property heads
-        # (treatmentRequired); infer_data_property_values fires SWRL atoms
-        # with datatype-property heads (hasSeverityScore).
+ 
+        # infer_property_values fires SWRL atoms with object-property
+        # heads (treatmentRequired, hasTachypneaStatus);
+        # infer_data_property_values fires SWRL atoms with
+        # datatype-property heads (hasSeverityScore). Both
+        # START_rule3b_tachypnea (rate -> hasTachypneaStatus) and
+        # START_rule3c_tachypnea_immediate (tachypneic ->
+        # treatmentRequired/hasSeverityScore) genuinely run here, in the
+        # correct order, within this single Pellet invocation.
         sync_reasoner_pellet(
             infer_property_values=True,
             infer_data_property_values=True,
             debug=0,
         )
-
+ 
     tag_classes = {
-        "Minor": onto.Minor,
-        "Delayed": onto.Delayed,
+        "Minor":     onto.Minor,
+        "Delayed":   onto.Delayed,
         "Immediate": onto.Immediate,
         "Expectant": onto.Expectant,
     }
-    comments = {name: _get_class_comment(onto, name) for name in tag_classes}
+    comments      = {name: _get_class_comment(onto, name) for name in tag_classes}
     decon_comment = _get_class_comment(onto, "RequiresDecontaminationFirst")
-
+ 
     table = {}
     for profile, p in individuals.items():
-        amb, br, pulse, cmd, dec = profile
-
+        amb, br, pulse, cmd, dec, tachy = profile
+ 
         # --- Path 1: OWL-DL classification via equivalentClass axioms ---
         inferred = [name for name, cls in tag_classes.items() if cls in p.INDIRECT_is_a]
         if len(inferred) != 1:
@@ -169,29 +196,31 @@ def _build_lookup_table(owl_path: str):
             )
         category = inferred[0]
         requires_decon = onto.RequiresDecontaminationFirst in p.INDIRECT_is_a
-
+ 
         # --- Path 2: SWRL rule inference (treatmentRequired, hasSeverityScore) ---
         swrl_actions = [
             _REVERSE_ACTION_MAP[a.name] for a in p.treatmentRequired
             if hasattr(a, "name") and a.name in _REVERSE_ACTION_MAP
         ]
         swrl_severities = list(p.hasSeverityScore)
-
+ 
         if len(swrl_actions) != 1:
             raise RuntimeError(
                 f"SWRL rules did not infer exactly one treatmentRequired "
                 f"value for profile {profile}: got {swrl_actions}. Check "
-                f"SWRL rule coverage / isRuleEnabled flags in the ontology."
+                f"SWRL rule coverage / isRuleEnabled flags in the ontology "
+                f"-- including START_rule3c_tachypnea_immediate if this "
+                f"profile is tachypneic."
             )
         if len(swrl_severities) != 1:
             raise RuntimeError(
                 f"SWRL rules did not infer exactly one hasSeverityScore "
                 f"value for profile {profile}: got {swrl_severities}."
             )
-
+ 
         swrl_action = swrl_actions[0]
         swrl_severity = int(swrl_severities[0])  # Pellet returns xsd:integer as float
-
+ 
         # --- Cross-check: the two independent reasoning paths must agree ---
         expected_action = CATEGORY_TO_ACTION[category]
         expected_severity = SEVERITY_BY_CATEGORY[category]
@@ -202,18 +231,11 @@ def _build_lookup_table(owl_path: str):
                 f"(expects action={expected_action}, severity={expected_severity}), "
                 f"but SWRL inferred action={swrl_action}, severity={swrl_severity}."
             )
-
+ 
         valid = set()
         if category == "Minor":
             valid.add(ACTION_TAG_MINOR)
         elif category == "Expectant":
-            # Tightened by design choice: over-triaging an Expectant
-            # patient to tag_immediate misallocates scarce resources
-            # away from patients who could actually benefit, so it is
-            # now contraindicated -- tag_expectant is the only valid
-            # tag for this category. See the updated Expectant class
-            # comment in the ontology for the patient-facing reason
-            # surfaced by check_action().
             valid.add(ACTION_TAG_EXPECTANT)
         else:
             valid.add(ACTION_TAG_IMMEDIATE)
@@ -224,11 +246,11 @@ def _build_lookup_table(owl_path: str):
         valid.add(ACTION_DECONTAMINATE)  # never medically contraindicated
         if not requires_decon:
             valid.add(ACTION_TREAT)
-
+ 
         table[profile] = {
             "category": category,
-            "severity": swrl_severity,           # genuinely SWRL-inferred now
-            "recommended_action": swrl_action,    # genuinely SWRL-inferred now
+            "severity": swrl_severity,
+            "recommended_action": swrl_action,
             "requires_decon": requires_decon,
             "valid_actions": valid,
             "category_comment": comments[category],
@@ -236,44 +258,50 @@ def _build_lookup_table(owl_path: str):
         }
     return table
 
-
 def _table_for(owl_path: str):
     abs_path = os.path.abspath(owl_path)
     if abs_path not in _TABLE_CACHE:
         _TABLE_CACHE[abs_path] = _build_lookup_table(owl_path)
     return _TABLE_CACHE[abs_path]
 
-
 def create_patient(onto, patient_id: str, ambulatory: bool,
-                    breathing: bool, pulse: bool, follows_commands: bool,
-                    decontaminated: bool = True, hazard_type: str = None):
+                   breathing: bool, pulse: bool, follows_commands: bool,
+                   decontaminated: bool = True, hazard_type: str = None,
+                   respiratory_rate: int = None):
     """
-    hazard_type: one of "chemical", "biological", "radiological", "nuclear",
-    or None. Only affects how many `decontaminate` actions are needed
-    (via get_decontamination_duration) -- it does not change triage
-    category or KG-validity of any action.
+    Creates a patient individual. If respiratory_rate is given, it is
+    asserted as hasRespiratoryRate -- this is the SAME representation
+    used in the lookup table, so _profile_key (below) can derive the
+    tachypnea boolean by re-checking the rate against the threshold in
+    plain Python, exactly mirroring (but not re-invoking) what
+    START_rule3b_tachypnea does inside the lookup table's one-time
+    Pellet run. This keeps single-patient calls fast (no per-patient
+    Pellet invocation) while still being backed by a lookup table whose
+    entries were genuinely derived through both SWRL rules.
     """
-
-    amb_ind = _get(onto, "ambulatory", "Ambulatory")
-    namb_ind = _get(onto, "nonAmbulatory", "NonAmbulatory")
-    br_ind = _get(onto, "breathing", "Breathing")
-    nbr_ind = _get(onto, "notBreathing", "NotBreathing")
-    pp_ind = _get(onto, "pulsePresent", "PulsePresent")
-    pa_ind = _get(onto, "pulseAbsent", "PulseAbsent")
-    fc_ind = _get(onto, "followsCommands", "FollowsCommands")
-    dfc_ind = _get(onto, "doesNotFollowCommands", "DoesNotFollowCommands")
-    dec_ind = _get(onto, "decontaminated", "Decontaminated")
-    ndec_ind = _get(onto, "notDecontaminated", "NotDecontaminated")
-
+    amb_ind  = _get(onto, "ambulatory",            "Ambulatory")
+    namb_ind = _get(onto, "nonAmbulatory",         "NonAmbulatory")
+    br_ind   = _get(onto, "breathing",              "Breathing")
+    nbr_ind  = _get(onto, "notBreathing",          "NotBreathing")
+    pp_ind   = _get(onto, "pulsePresent",          "PulsePresent")
+    pa_ind   = _get(onto, "pulseAbsent",           "PulseAbsent")
+    fc_ind   = _get(onto, "followsCommands",       "FollowsCommands")
+    dfc_ind  = _get(onto, "doesNotFollowCommands", "DoesNotFollowCommands")
+    dec_ind  = _get(onto, "decontaminated",        "Decontaminated")
+    ndec_ind = _get(onto, "notDecontaminated",     "NotDecontaminated")
+ 
     with onto:
         p = onto.Patient(patient_id)
-        p.hasAmbulationStatus = [amb_ind if ambulatory else namb_ind]
-        p.hasRespiratoryStatus = [br_ind if breathing else nbr_ind]
-        p.hasPulseStatus = [pp_ind if pulse else pa_ind]
-        p.hasMentalStatus = [fc_ind if follows_commands else dfc_ind]
-        p.hasDecontaminationStatus = [dec_ind if decontaminated else ndec_ind]
-        p.is_decontaminated = decontaminated
-
+        p.hasAmbulationStatus      = [amb_ind  if ambulatory       else namb_ind]
+        p.hasRespiratoryStatus     = [br_ind   if breathing        else nbr_ind]
+        p.hasPulseStatus           = [pp_ind   if pulse            else pa_ind]
+        p.hasMentalStatus          = [fc_ind   if follows_commands else dfc_ind]
+        p.hasDecontaminationStatus = [dec_ind  if decontaminated   else ndec_ind]
+        p.is_decontaminated        = decontaminated
+ 
+        if respiratory_rate is not None:
+            p.hasRespiratoryRate = [respiratory_rate]
+ 
         if hazard_type is not None:
             hazard_ind_name = HAZARD_INDIVIDUAL_MAP.get(hazard_type)
             if hazard_ind_name is None:
@@ -284,7 +312,8 @@ def create_patient(onto, patient_id: str, ambulatory: bool,
             hazard_ind = _get(onto, hazard_ind_name)
             p.hasHazardType = [hazard_ind]
     return p
-
+ 
+ 
 
 def get_decontamination_duration(onto, patient, default=1):
     """
@@ -318,19 +347,35 @@ def mark_decontaminated(onto, patient):
 
 
 def _profile_key(patient):
+    """
+    Reads the live patient's asserted properties and maps to the
+    6-dimensional key used by _build_lookup_table. The tachypnea
+    boolean is computed directly from hasRespiratoryRate using the same
+    threshold (>30) as START_rule3b_tachypnea -- this is a deliberate,
+    documented duplication of that rule's condition in plain Python, so
+    that a single created patient doesn't need its own Pellet
+    invocation to determine its table key. The table entry itself,
+    however, IS genuinely the product of both SWRL rules firing inside
+    _build_lookup_table's one Pellet run -- so this still uses the
+    rules' actual output, just doesn't re-run them per patient.
+    """
     onto = patient.namespace.ontology
-    amb_ind = _get(onto, "ambulatory", "Ambulatory")
-    br_ind = _get(onto, "breathing", "Breathing")
-    pp_ind = _get(onto, "pulsePresent", "PulsePresent")
-    fc_ind = _get(onto, "followsCommands", "FollowsCommands")
-    dec_ind = _get(onto, "decontaminated", "Decontaminated")
-
+    amb_ind = _get(onto, "ambulatory",        "Ambulatory")
+    br_ind  = _get(onto, "breathing",         "Breathing")
+    pp_ind  = _get(onto, "pulsePresent",      "PulsePresent")
+    fc_ind  = _get(onto, "followsCommands",   "FollowsCommands")
+    dec_ind = _get(onto, "decontaminated",    "Decontaminated")
+ 
     amb = amb_ind in patient.hasAmbulationStatus
-    br = br_ind in patient.hasRespiratoryStatus
-    pls = pp_ind in patient.hasPulseStatus
-    cmd = fc_ind in patient.hasMentalStatus
+    br  = br_ind  in patient.hasRespiratoryStatus
+    pls = pp_ind  in patient.hasPulseStatus
+    cmd = fc_ind  in patient.hasMentalStatus
     dec = dec_ind in patient.hasDecontaminationStatus
-    return (amb, br, pls, cmd, dec), onto.base_iri
+ 
+    rate = list(patient.hasRespiratoryRate) if hasattr(patient, "hasRespiratoryRate") else []
+    tachy = br and bool(rate) and rate[0] > 30
+ 
+    return (amb, br, pls, cmd, dec, tachy), onto.base_iri
 
 
 def check_action(onto, patient, proposed_action: str):

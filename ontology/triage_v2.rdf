@@ -114,6 +114,15 @@
     
 
 
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#TachypneaStatus"/>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#requiresAction -->
 
     <owl:ObjectProperty rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#requiresAction">
@@ -150,6 +159,16 @@
         <rdfs:domain rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#HazardType"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
         <rdfs:comment>Number of decontaminate actions required to fully decontaminate a patient exposed to this hazard type.</rdfs:comment>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryRate -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryRate">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <rdfs:comment>Patient&apos;s measured respiratory rate in breaths per minute, used to detect tachypnea (START Rule 3: RR &gt; 30 → Immediate).</rdfs:comment>
     </owl:DatatypeProperty>
     
 
@@ -263,6 +282,10 @@
                         <owl:onProperty rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
                         <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
                     </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                        <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic"/>
+                    </owl:Restriction>
                 </owl:intersectionOf>
             </owl:Class>
         </owl:equivalentClass>
@@ -374,6 +397,18 @@
                                     </owl:Restriction>
                                 </owl:intersectionOf>
                             </owl:Class>
+                            <owl:Class>
+                                <owl:intersectionOf rdf:parseType="Collection">
+                                    <owl:Restriction>
+                                        <owl:onProperty rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
+                                        <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
+                                    </owl:Restriction>
+                                    <owl:Restriction>
+                                        <owl:onProperty rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                                        <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic"/>
+                                    </owl:Restriction>
+                                </owl:intersectionOf>
+                            </owl:Class>
                         </owl:unionOf>
                     </owl:Class>
                     <owl:Restriction>
@@ -438,6 +473,15 @@
     <owl:Class rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotDecontaminated">
         <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#DecontaminationStatus"/>
         <rdfs:comment>Patient has not yet been decontaminated. CBRN Rule 5: direct treatment risks responder contamination. Decontamination must occur before &apos;treat&apos; is permitted.</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#TachypneaStatus"/>
+        <owl:disjointWith rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic"/>
     </owl:Class>
     
 
@@ -519,6 +563,29 @@
 
     <owl:Class rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#RespiratoryStatus">
         <rdfs:comment xml:lang="en">Whether the patient is breathing spontaneously. START Rule 2 dimension. First check after ambulation in START protocol.</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#TachypneaStatus -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#TachypneaStatus">
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic"/>
+                    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#TachypneaStatus"/>
     </owl:Class>
     
 
@@ -681,6 +748,14 @@
     
 
 
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#notTachypneic -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#notTachypneic">
+        <rdf:type rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic"/>
+    </owl:NamedIndividual>
+    
+
+
     <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#nuclearHazard -->
 
     <owl:NamedIndividual rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#nuclearHazard">
@@ -720,6 +795,14 @@
     <owl:NamedIndividual rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#radiologicalHazard">
         <rdf:type rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#RadiologicalHazard"/>
         <hasDecontaminationDuration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2</hasDecontaminationDuration>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://www.semanticweb.org/hp/ontologies/2026/5/triage#tachypneic -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tachypneic">
+        <rdf:type rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic"/>
     </owl:NamedIndividual>
     
 
@@ -815,6 +898,24 @@
     <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage/s">
         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
     </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#a">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#r">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#pulse">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#m">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#t">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
     <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a">
         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
     </rdf:Description>
@@ -826,6 +927,279 @@
     </rdf:Description>
     <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m">
         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate2">
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Variable"/>
+    </rdf:Description>
+    <rdf:Description>
+        <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
+        <rdfs:comment></rdfs:comment>
+        <rdfs:label>START_rule3c_tachypnea_immediate</rdfs:label>
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
+        <swrl:body>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasAmbulationStatus"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#a"/>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                <rdf:first>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NonAmbulatory"/>
+                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#a"/>
+                                    </rdf:Description>
+                                </rdf:first>
+                                <rdf:rest>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                        <rdf:first>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
+                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#r"/>
+                                            </rdf:Description>
+                                        </rdf:first>
+                                        <rdf:rest>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                <rdf:first>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
+                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#r"/>
+                                                    </rdf:Description>
+                                                </rdf:first>
+                                                <rdf:rest>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                        <rdf:first>
+                                                            <rdf:Description>
+                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#t"/>
+                                                            </rdf:Description>
+                                                        </rdf:first>
+                                                        <rdf:rest>
+                                                            <rdf:Description>
+                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                <rdf:first>
+                                                                    <rdf:Description>
+                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Tachypneic"/>
+                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#t"/>
+                                                                    </rdf:Description>
+                                                                </rdf:first>
+                                                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                            </rdf:Description>
+                                                        </rdf:rest>
+                                                    </rdf:Description>
+                                                </rdf:rest>
+                                            </rdf:Description>
+                                        </rdf:rest>
+                                    </rdf:Description>
+                                </rdf:rest>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:body>
+        <swrl:head>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                        <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#treatmentRequired"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                        <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tagImmediate"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasSeverityScore"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                <swrl:argument2 rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</swrl:argument2>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:head>
+    </rdf:Description>
+    <rdf:Description>
+        <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
+        <rdfs:comment></rdfs:comment>
+        <rdfs:label>START_rule5_immediate_no_commands</rdfs:label>
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
+        <swrl:body>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasAmbulationStatus"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                <rdf:first>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NonAmbulatory"/>
+                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
+                                    </rdf:Description>
+                                </rdf:first>
+                                <rdf:rest>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                        <rdf:first>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
+                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
+                                            </rdf:Description>
+                                        </rdf:first>
+                                        <rdf:rest>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                <rdf:first>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
+                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
+                                                    </rdf:Description>
+                                                </rdf:first>
+                                                <rdf:rest>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                        <rdf:first>
+                                                            <rdf:Description>
+                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasPulseStatus"/>
+                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
+                                                            </rdf:Description>
+                                                        </rdf:first>
+                                                        <rdf:rest>
+                                                            <rdf:Description>
+                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                <rdf:first>
+                                                                    <rdf:Description>
+                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#PulsePresent"/>
+                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
+                                                                    </rdf:Description>
+                                                                </rdf:first>
+                                                                <rdf:rest>
+                                                                    <rdf:Description>
+                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                        <rdf:first>
+                                                                            <rdf:Description>
+                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasMentalStatus"/>
+                                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
+                                                                            </rdf:Description>
+                                                                        </rdf:first>
+                                                                        <rdf:rest>
+                                                                            <rdf:Description>
+                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                                <rdf:first>
+                                                                                    <rdf:Description>
+                                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#DoesNotFollowCommands"/>
+                                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
+                                                                                    </rdf:Description>
+                                                                                </rdf:first>
+                                                                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                                            </rdf:Description>
+                                                                        </rdf:rest>
+                                                                    </rdf:Description>
+                                                                </rdf:rest>
+                                                            </rdf:Description>
+                                                        </rdf:rest>
+                                                    </rdf:Description>
+                                                </rdf:rest>
+                                            </rdf:Description>
+                                        </rdf:rest>
+                                    </rdf:Description>
+                                </rdf:rest>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:body>
+        <swrl:head>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                        <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#treatmentRequired"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                        <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tagImmediate"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasSeverityScore"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                <swrl:argument2 rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</swrl:argument2>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:head>
     </rdf:Description>
     <rdf:Description>
         <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
@@ -1193,6 +1567,146 @@
     <rdf:Description>
         <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
         <rdfs:comment></rdfs:comment>
+        <rdfs:label>START_rule3b_tachypnea</rdfs:label>
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
+        <swrl:body>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryRate"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate"/>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                <rdf:first>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#BuiltinAtom"/>
+                                        <swrl:builtin rdf:resource="http://www.w3.org/2003/11/swrlb#greaterThan"/>
+                                        <swrl:arguments>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                                <rdf:first rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate"/>
+                                                <rdf:rest>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                                        <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</rdf:first>
+                                                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                    </rdf:Description>
+                                                </rdf:rest>
+                                            </rdf:Description>
+                                        </swrl:arguments>
+                                    </rdf:Description>
+                                </rdf:first>
+                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:body>
+        <swrl:head>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                        <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                        <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tachypneic"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+            </rdf:Description>
+        </swrl:head>
+    </rdf:Description>
+    <rdf:Description>
+        <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
+        <rdfs:comment></rdfs:comment>
+        <rdfs:label>START_rule3d_not_tachypneic</rdfs:label>
+        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
+        <swrl:body>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                        <rdf:first>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
+                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryRate"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate2"/>
+                            </rdf:Description>
+                        </rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                <rdf:first>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#BuiltinAtom"/>
+                                        <swrl:builtin rdf:resource="http://www.w3.org/2003/11/swrlb#lessThanOrEqual"/>
+                                        <swrl:arguments>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                                <rdf:first rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#rate2"/>
+                                                <rdf:rest>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                                        <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</rdf:first>
+                                                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                    </rdf:Description>
+                                                </rdf:rest>
+                                            </rdf:Description>
+                                        </swrl:arguments>
+                                    </rdf:Description>
+                                </rdf:first>
+                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </rdf:rest>
+            </rdf:Description>
+        </swrl:body>
+        <swrl:head>
+            <rdf:Description>
+                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                <rdf:first>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                        <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                        <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#notTachypneic"/>
+                    </rdf:Description>
+                </rdf:first>
+                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+            </rdf:Description>
+        </swrl:head>
+    </rdf:Description>
+    <rdf:Description>
+        <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
+        <rdfs:comment></rdfs:comment>
         <rdfs:label>START_rule1_minor</rdfs:label>
         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
         <swrl:body>
@@ -1264,152 +1778,6 @@
     <rdf:Description>
         <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
         <rdfs:comment></rdfs:comment>
-        <rdfs:label>START_rule5_immediate_no_commands</rdfs:label>
-        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
-        <swrl:body>
-            <rdf:Description>
-                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                <rdf:first>
-                    <rdf:Description>
-                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
-                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
-                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                    </rdf:Description>
-                </rdf:first>
-                <rdf:rest>
-                    <rdf:Description>
-                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                        <rdf:first>
-                            <rdf:Description>
-                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
-                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasAmbulationStatus"/>
-                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
-                            </rdf:Description>
-                        </rdf:first>
-                        <rdf:rest>
-                            <rdf:Description>
-                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                <rdf:first>
-                                    <rdf:Description>
-                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
-                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NonAmbulatory"/>
-                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
-                                    </rdf:Description>
-                                </rdf:first>
-                                <rdf:rest>
-                                    <rdf:Description>
-                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                        <rdf:first>
-                                            <rdf:Description>
-                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
-                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
-                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
-                                            </rdf:Description>
-                                        </rdf:first>
-                                        <rdf:rest>
-                                            <rdf:Description>
-                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                                <rdf:first>
-                                                    <rdf:Description>
-                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
-                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
-                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
-                                                    </rdf:Description>
-                                                </rdf:first>
-                                                <rdf:rest>
-                                                    <rdf:Description>
-                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                                        <rdf:first>
-                                                            <rdf:Description>
-                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
-                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasPulseStatus"/>
-                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
-                                                            </rdf:Description>
-                                                        </rdf:first>
-                                                        <rdf:rest>
-                                                            <rdf:Description>
-                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                                                <rdf:first>
-                                                                    <rdf:Description>
-                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
-                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#PulsePresent"/>
-                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
-                                                                    </rdf:Description>
-                                                                </rdf:first>
-                                                                <rdf:rest>
-                                                                    <rdf:Description>
-                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                                                        <rdf:first>
-                                                                            <rdf:Description>
-                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
-                                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasMentalStatus"/>
-                                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
-                                                                            </rdf:Description>
-                                                                        </rdf:first>
-                                                                        <rdf:rest>
-                                                                            <rdf:Description>
-                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                                                                                <rdf:first>
-                                                                                    <rdf:Description>
-                                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
-                                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#DoesNotFollowCommands"/>
-                                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
-                                                                                    </rdf:Description>
-                                                                                </rdf:first>
-                                                                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
-                                                                            </rdf:Description>
-                                                                        </rdf:rest>
-                                                                    </rdf:Description>
-                                                                </rdf:rest>
-                                                            </rdf:Description>
-                                                        </rdf:rest>
-                                                    </rdf:Description>
-                                                </rdf:rest>
-                                            </rdf:Description>
-                                        </rdf:rest>
-                                    </rdf:Description>
-                                </rdf:rest>
-                            </rdf:Description>
-                        </rdf:rest>
-                    </rdf:Description>
-                </rdf:rest>
-            </rdf:Description>
-        </swrl:body>
-        <swrl:head>
-            <rdf:Description>
-                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                <rdf:first>
-                    <rdf:Description>
-                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
-                        <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#treatmentRequired"/>
-                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                        <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tagImmediate"/>
-                    </rdf:Description>
-                </rdf:first>
-                <rdf:rest>
-                    <rdf:Description>
-                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
-                        <rdf:first>
-                            <rdf:Description>
-                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
-                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasSeverityScore"/>
-                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                <swrl:argument2 rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</swrl:argument2>
-                            </rdf:Description>
-                        </rdf:first>
-                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
-                    </rdf:Description>
-                </rdf:rest>
-            </rdf:Description>
-        </swrl:head>
-    </rdf:Description>
-    <rdf:Description>
-        <swrl2:isRuleEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</swrl2:isRuleEnabled>
-        <rdfs:comment></rdfs:comment>
         <rdfs:label>START_rule6_delayed</rdfs:label>
         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#Imp"/>
         <swrl:body>
@@ -1419,7 +1787,7 @@
                     <rdf:Description>
                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
                         <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Patient"/>
-                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
                     </rdf:Description>
                 </rdf:first>
                 <rdf:rest>
@@ -1429,8 +1797,8 @@
                             <rdf:Description>
                                 <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
                                 <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasAmbulationStatus"/>
-                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#a"/>
                             </rdf:Description>
                         </rdf:first>
                         <rdf:rest>
@@ -1440,7 +1808,7 @@
                                     <rdf:Description>
                                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
                                         <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NonAmbulatory"/>
-                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/a"/>
+                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#a"/>
                                     </rdf:Description>
                                 </rdf:first>
                                 <rdf:rest>
@@ -1450,8 +1818,8 @@
                                             <rdf:Description>
                                                 <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
                                                 <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasRespiratoryStatus"/>
-                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
+                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#r"/>
                                             </rdf:Description>
                                         </rdf:first>
                                         <rdf:rest>
@@ -1461,7 +1829,7 @@
                                                     <rdf:Description>
                                                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
                                                         <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#Breathing"/>
-                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/r"/>
+                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#r"/>
                                                     </rdf:Description>
                                                 </rdf:first>
                                                 <rdf:rest>
@@ -1471,8 +1839,8 @@
                                                             <rdf:Description>
                                                                 <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
                                                                 <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasPulseStatus"/>
-                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
+                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#pulse"/>
                                                             </rdf:Description>
                                                         </rdf:first>
                                                         <rdf:rest>
@@ -1482,7 +1850,7 @@
                                                                     <rdf:Description>
                                                                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
                                                                         <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#PulsePresent"/>
-                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/pulse"/>
+                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#pulse"/>
                                                                     </rdf:Description>
                                                                 </rdf:first>
                                                                 <rdf:rest>
@@ -1492,8 +1860,8 @@
                                                                             <rdf:Description>
                                                                                 <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
                                                                                 <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasMentalStatus"/>
-                                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
-                                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
+                                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#m"/>
                                                                             </rdf:Description>
                                                                         </rdf:first>
                                                                         <rdf:rest>
@@ -1503,10 +1871,35 @@
                                                                                     <rdf:Description>
                                                                                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
                                                                                         <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#FollowsCommands"/>
-                                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/m"/>
+                                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#m"/>
                                                                                     </rdf:Description>
                                                                                 </rdf:first>
-                                                                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                                                <rdf:rest>
+                                                                                    <rdf:Description>
+                                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                                        <rdf:first>
+                                                                                            <rdf:Description>
+                                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
+                                                                                                <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasTachypneaStatus"/>
+                                                                                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
+                                                                                                <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#t"/>
+                                                                                            </rdf:Description>
+                                                                                        </rdf:first>
+                                                                                        <rdf:rest>
+                                                                                            <rdf:Description>
+                                                                                                <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#AtomList"/>
+                                                                                                <rdf:first>
+                                                                                                    <rdf:Description>
+                                                                                                        <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#ClassAtom"/>
+                                                                                                        <swrl:classPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#NotTachypneic"/>
+                                                                                                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#t"/>
+                                                                                                    </rdf:Description>
+                                                                                                </rdf:first>
+                                                                                                <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                                                                            </rdf:Description>
+                                                                                        </rdf:rest>
+                                                                                    </rdf:Description>
+                                                                                </rdf:rest>
                                                                             </rdf:Description>
                                                                         </rdf:rest>
                                                                     </rdf:Description>
@@ -1532,7 +1925,7 @@
                     <rdf:Description>
                         <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#IndividualPropertyAtom"/>
                         <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#treatmentRequired"/>
-                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                        <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
                         <swrl:argument2 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#tagDelayed"/>
                     </rdf:Description>
                 </rdf:first>
@@ -1543,7 +1936,7 @@
                             <rdf:Description>
                                 <rdf:type rdf:resource="http://www.w3.org/2003/11/swrl#DatavaluedPropertyAtom"/>
                                 <swrl:propertyPredicate rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#hasSeverityScore"/>
-                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage/p"/>
+                                <swrl:argument1 rdf:resource="http://www.semanticweb.org/hp/ontologies/2026/5/triage#p"/>
                                 <swrl:argument2 rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</swrl:argument2>
                             </rdf:Description>
                         </rdf:first>
