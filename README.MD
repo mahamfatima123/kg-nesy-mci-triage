@@ -4,7 +4,7 @@ This repository contains the code, ontology, trained checkpoints, and evaluation
 
 > **In one sentence:** we encode the START mass-casualty triage protocol (plus CBRN decontamination rules) as a reasoner-validated OWL/SWRL ontology, and use it to *structurally* block a Deep Q-Network agent from ever taking a clinically unsafe action — instead of just penalizing unsafe actions and hoping the agent learns to avoid them.
 
-> **Branches:** this is `main` — the core system, ontology, and the multi-seed robustness experiment reported in the paper. A second branch, [`TRIAGE_CrossValidation`](../../tree/TRIAGE_CrossValidation), shares the same ontology and reasoner code and adds an independent external validation against a structured triage benchmark dataset (not part of the core paper experiment).
+> **Branches:** this is `main` — the core system, ontology, and the multi-seed robustness experiment reported in the paper. A second branch, [`syn_STARTS_validation`](../../tree/syn_STARTS_validation), shares the same ontology and reasoner code and adds an independent external validation against a structured triage benchmark dataset (not part of the core paper experiment).
 
 ---
 
