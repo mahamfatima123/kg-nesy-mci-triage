@@ -233,19 +233,18 @@ def _build_lookup_table(owl_path: str):
             )
  
         valid = set()
-        if category == "Minor":
-            valid.add(ACTION_TAG_MINOR)
-        elif category == "Expectant":
-            valid.add(ACTION_TAG_EXPECTANT)
-        else:
-            valid.add(ACTION_TAG_IMMEDIATE)
-            valid.add(ACTION_TAG_EXPECTANT)
-            if category == "Delayed":
-                valid.add(ACTION_TAG_DELAYED)
-        valid.add(ACTION_OPEN_AIRWAY)
-        valid.add(ACTION_DECONTAMINATE)  # never medically contraindicated
         if not requires_decon:
+            if category == "Minor":
+                valid.add(ACTION_TAG_MINOR)
+            elif category == "Expectant":
+                valid.add(ACTION_TAG_EXPECTANT)
+            else:
+                valid.add(ACTION_TAG_IMMEDIATE)
+                if category == "Delayed":
+                    valid.add(ACTION_TAG_DELAYED)
             valid.add(ACTION_TREAT)
+        valid.add(ACTION_OPEN_AIRWAY)
+        valid.add(ACTION_DECONTAMINATE)  
  
         table[profile] = {
             "category": category,
@@ -379,10 +378,6 @@ def _profile_key(patient):
 
 
 def check_action(onto, patient, proposed_action: str):
-    """
-    Validates proposed RL action against the reasoner-derived lookup table
-    (see _build_lookup_table). Returns (is_valid: bool, justification: str).
-    """
     key, base_iri = _profile_key(patient)
     table = _table_for(_owl_path_for_onto(onto))
     entry = table[key]
@@ -391,7 +386,10 @@ def check_action(onto, patient, proposed_action: str):
         action_ind = ACTION_INDIVIDUAL_MAP.get(proposed_action, proposed_action)
         return True, f"[KG check passed] {_get_action_comment(onto, action_ind)}"
 
-    if proposed_action == ACTION_TREAT and entry["requires_decon"]:
+    if entry["requires_decon"] and proposed_action in (
+        ACTION_TREAT, ACTION_TAG_IMMEDIATE, ACTION_TAG_DELAYED,
+        ACTION_TAG_MINOR, ACTION_TAG_EXPECTANT,
+    ):
         return False, f"[CBRN Rule 5] {entry['decon_comment']}"
 
     return False, (

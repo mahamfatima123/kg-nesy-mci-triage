@@ -27,37 +27,40 @@ def test_all():
     assert not check_action(onto, p1, ACTION_TAG_EXPECTANT)[0]
     print("PASS scenario 1: ambulatory patient — START Rule 1")
 
+
     # --- Scenario 2: Immediate category (no breathing, pulse present) ---
-    # Allowed: tag_immediate, tag_expectant. Blocked: tag_minor, tag_delayed.
+    # Allowed: tag_immediate only. Blocked: tag_minor, tag_delayed, tag_expectant.
     p2 = make(onto, "p2", False, False, True,  False)
     assert check_action(onto, p2, ACTION_TAG_IMMEDIATE)[0]
-    assert check_action(onto, p2, ACTION_TAG_EXPECTANT)[0]
+    assert not check_action(onto, p2, ACTION_TAG_EXPECTANT)[0]
     assert not check_action(onto, p2, ACTION_TAG_MINOR)[0]
     assert not check_action(onto, p2, ACTION_TAG_DELAYED)[0]
     print("PASS scenario 2: not breathing patient — START Rule 2")
 
     # --- Scenario 3: Immediate category (breathing, no pulse) ---
+    # Allowed: tag_immediate only. Blocked: tag_minor, tag_delayed, tag_expectant.
     p3 = make(onto, "p3", False, True,  False, False)
     assert check_action(onto, p3, ACTION_TAG_IMMEDIATE)[0]
-    assert check_action(onto, p3, ACTION_TAG_EXPECTANT)[0]
+    assert not check_action(onto, p3, ACTION_TAG_EXPECTANT)[0]
     assert not check_action(onto, p3, ACTION_TAG_MINOR)[0]
     assert not check_action(onto, p3, ACTION_TAG_DELAYED)[0]
     print("PASS scenario 3: no pulse patient — START Rule 3")
 
     # --- Scenario 4: Immediate category (breathing, pulse, no commands) ---
+    # Allowed: tag_immediate only. Blocked: tag_minor, tag_delayed, tag_expectant.
     p4 = make(onto, "p4", False, True,  True,  False)
     assert check_action(onto, p4, ACTION_TAG_IMMEDIATE)[0]
-    assert check_action(onto, p4, ACTION_TAG_EXPECTANT)[0]
+    assert not check_action(onto, p4, ACTION_TAG_EXPECTANT)[0]
     assert not check_action(onto, p4, ACTION_TAG_MINOR)[0]
     assert not check_action(onto, p4, ACTION_TAG_DELAYED)[0]
     print("PASS scenario 4: no commands patient — START Rule 4")
 
-    # --- Scenario 5: Delayed category -> all of delayed/immediate/expectant
-    # are allowed, only tag_minor is blocked ---
+    # --- Scenario 5: Delayed category -> tag_delayed and tag_immediate are
+    # allowed (clinician may escalate); tag_minor and tag_expectant blocked ---
     p5 = make(onto, "p5", False, True,  True,  True)
     assert check_action(onto, p5, ACTION_TAG_DELAYED)[0]
     assert check_action(onto, p5, ACTION_TAG_IMMEDIATE)[0]
-    assert check_action(onto, p5, ACTION_TAG_EXPECTANT)[0]
+    assert not check_action(onto, p5, ACTION_TAG_EXPECTANT)[0]
     assert not check_action(onto, p5, ACTION_TAG_MINOR)[0]
     print("PASS scenario 5: stable patient can be Delayed")
 
@@ -67,7 +70,7 @@ def test_all():
     assert ACTION_TAG_DELAYED not in valid_actions
     assert ACTION_TAG_MINOR   not in valid_actions
     assert ACTION_TAG_IMMEDIATE in valid_actions
-    assert ACTION_TAG_EXPECTANT in valid_actions
+    assert ACTION_TAG_EXPECTANT not in valid_actions
     print(f"PASS scenario 6: valid actions for non-breathing = {valid_actions}")
 
     # --- Scenario 7: CBRN Rule 5 -- treat blocked while contaminated,
@@ -80,10 +83,11 @@ def test_all():
     p7c = make(onto, "p7_clean", False, True, True, True, decontaminated=True)
     assert check_action(onto, p7c, ACTION_TREAT)[0], "FAIL 7d"
     print("PASS scenario 7: CBRN Rule 5 — treat blocked when contaminated, permitted when clean")
-
+    
     # --- Scenario 8: Expectant category -> only tag_expectant is valid.
-    # tag_immediate is now contraindicated (hand-added tightening rule);
-    # tag_minor and tag_delayed were already blocked by base START logic.
+    # tag_immediate, tag_minor, and tag_delayed are all contraindicated --
+    # this is now symmetric with how tag_expectant is blocked everywhere
+    # except the Expectant category itself (see scenarios 2/3/4/5).
     p8 = make(onto, "p8", False, False, False, True)
     valid, reason = check_action(onto, p8, ACTION_TAG_IMMEDIATE)
     assert not valid, f"FAIL 8a: tag_immediate should be contraindicated for Expectant, got: {reason}"
@@ -97,7 +101,22 @@ def test_all():
     print(f"PASS scenario 8: Expectant patient — tag_immediate now contraindicated, "
           f"valid tag actions = {tag_actions_p8}")
 
-    print("\nAll 8 scenarios passed.")
+    # --- Scenario 9: contaminated patient -> NO tag action is valid until
+    # decontaminated, regardless of category (extends CBRN Rule 5 from
+    # treat-only to all tag actions and treat) ---
+    p9 = make(onto, "p9", False, True, True, True, decontaminated=False)
+    valid, reason = check_action(onto, p9, ACTION_TAG_DELAYED)
+    assert not valid, f"FAIL 9a: tag_delayed should be blocked while contaminated, got: {reason}"
+    assert "CBRN Rule 5" in reason, f"FAIL 9b: {reason}"
+    assert check_action(onto, p9, ACTION_OPEN_AIRWAY)[0], "FAIL 9c"
+    assert check_action(onto, p9, "decontaminate")[0], "FAIL 9d"
+    valid_actions_p9 = get_valid_actions(onto, p9)
+    tag_actions_p9 = [a for a in valid_actions_p9 if a.startswith("tag_")]
+    assert tag_actions_p9 == [], f"FAIL 9e: expected no tag actions while contaminated, got {tag_actions_p9}"
+    print(f"PASS scenario 9: contaminated Delayed-vitals patient — no tag permitted "
+          f"until decontaminated, valid actions = {sorted(valid_actions_p9)}")
+
+    print("\nAll 9 scenarios passed.")
 
 if __name__ == "__main__":
     test_all()
