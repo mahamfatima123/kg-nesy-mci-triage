@@ -101,7 +101,22 @@ def test_all():
     print(f"PASS scenario 8: Expectant patient — tag_immediate now contraindicated, "
           f"valid tag actions = {tag_actions_p8}")
 
-    print("\nAll 8 scenarios passed.")
+    # --- Scenario 9: contaminated patient -> NO tag action is valid until
+    # decontaminated, regardless of category (extends CBRN Rule 5 from
+    # treat-only to all tag actions and treat) ---
+    p9 = make(onto, "p9", False, True, True, True, decontaminated=False)
+    valid, reason = check_action(onto, p9, ACTION_TAG_DELAYED)
+    assert not valid, f"FAIL 9a: tag_delayed should be blocked while contaminated, got: {reason}"
+    assert "CBRN Rule 5" in reason, f"FAIL 9b: {reason}"
+    assert check_action(onto, p9, ACTION_OPEN_AIRWAY)[0], "FAIL 9c"
+    assert check_action(onto, p9, "decontaminate")[0], "FAIL 9d"
+    valid_actions_p9 = get_valid_actions(onto, p9)
+    tag_actions_p9 = [a for a in valid_actions_p9 if a.startswith("tag_")]
+    assert tag_actions_p9 == [], f"FAIL 9e: expected no tag actions while contaminated, got {tag_actions_p9}"
+    print(f"PASS scenario 9: contaminated Delayed-vitals patient — no tag permitted "
+          f"until decontaminated, valid actions = {sorted(valid_actions_p9)}")
+
+    print("\nAll 9 scenarios passed.")
 
 if __name__ == "__main__":
     test_all()
