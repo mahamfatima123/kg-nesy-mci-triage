@@ -21,7 +21,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # fresh for each seed, so the headline accuracy/violation numbers can be
 # reported as mean +/- std instead of a single run. The KG-DQN violation
 # rate is guaranteed to be 0.0 on every seed by construction (masking), so
-# averaging it doesn't change the safety claim -- it just makes the
+# averaging it doesn't change the safety claim - it just makes the
 # *accuracy* comparison something a reviewer can actually trust.
 #
 # If this is too slow on your machine, drop to SEEDS = [42, 43] (training
@@ -47,12 +47,13 @@ def save_csv(results, path):
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["ambulatory", "breathing", "pulse", "follows_commands",
-                          "decontaminated", "hazard_type", "prior_probability",
-                          "correct_tag", "kg_recommended", "final_tag",
-                          "correct", "matches_kg", "any_violation", "n_actions"])
+                          "decontaminated", "hazard_type", "tachypneic",
+                          "prior_probability", "correct_tag", "kg_recommended",
+                          "final_tag", "correct", "matches_kg", "any_violation",
+                          "n_actions"])
         for r in results:
-            amb, br, pulse, cmd, dec, hazard = r["profile"]
-            writer.writerow([amb, br, pulse, cmd, dec, hazard,
+            amb, br, pulse, cmd, dec, hazard, tachy = r["profile"]
+            writer.writerow([amb, br, pulse, cmd, dec, hazard, tachy,
                               f"{r['prior_probability']:.6f}", r["correct_tag"],
                               r["kg_recommended"], r["final_tag"], r["correct"],
                               r["matches_kg"], r["any_violation"], r["n_actions"]])
@@ -60,14 +61,14 @@ def save_csv(results, path):
 
 def run_one_seed(seed, van_ckpt, kg_ckpt):
     """Train both agents from scratch for one seed and return their
-    exhaustive 80-profile evaluation results plus the loaded models."""
+    exhaustive 120-profile evaluation results plus the loaded models."""
     probe_env = MCIEnv()
     state_dim  = probe_env.observation_space.shape[0]
     action_dim = probe_env.action_space.n
 
-    print(f"\n--- Seed {seed}: training Vanilla DQN ---")
+    print(f"\n-- Seed {seed}: training Vanilla DQN --")
     train(use_kg=False, episodes=TRAIN_EPISODES, seed=seed, save_path=van_ckpt)
-    print(f"\n--- Seed {seed}: training KG-DQN ---")
+    print(f"\n-- Seed {seed}: training KG-DQN --")
     train(use_kg=True, episodes=TRAIN_EPISODES, seed=seed, save_path=kg_ckpt)
 
     vanilla_model = DQN(state_dim=state_dim, action_dim=action_dim).to(device)
@@ -91,7 +92,7 @@ if __name__ == "__main__":
     kg_accs,  kg_viols  = [], []
 
     # Kept aside for the single-seed deep dive below (CSVs, plots,
-    # rarity analysis, action traces, budget test) -- multi-seed
+    # rarity analysis, action traces, budget test) - multi-seed
     # averaging is great for the headline numbers but a qualitative
     # failure analysis only makes sense for one concrete run.
     primary_vanilla_results = None
@@ -116,7 +117,7 @@ if __name__ == "__main__":
             kg_results, f"[seed {seed}] KG-DQN (masked)")
 
         assert kg_viol_rate == 0.0, (
-            f"Seed {seed}: KG-DQN should have zero violations across ALL 80 "
+            f"Seed {seed}: KG-DQN should have zero violations across ALL 120 "
             "profiles by construction (masking), not just the training distribution."
         )
 
@@ -160,7 +161,7 @@ if __name__ == "__main__":
     print(f"\n[primary seed {PRIMARY_SEED}] Saved per-profile results to "
           "results/robustness_vanilla.csv and results/robustness_kg.csv")
 
-    # ---- Correctness/safety vs. profile rarity ----
+    # -- Correctness/safety vs. profile rarity --
     def sort_by_rarity(results):
         return sorted(results, key=lambda r: r["prior_probability"])
 
@@ -188,7 +189,7 @@ if __name__ == "__main__":
 
     ax = axes[1]
     ax.plot(rolling(van_violation_flags), color="crimson", lw=2, label="Vanilla DQN")
-    ax.axhline(0, color="darkorange", lw=2, linestyle="--", label="KG-DQN (always 0)")
+    ax.axhline(0, color="darkorange", lw=2, linestyle="-", label="KG-DQN (always 0)")
     ax.set_title("Safety violations vs. profile rarity")
     ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)")
     ax.set_ylabel("Fraction with a violation")
@@ -199,15 +200,15 @@ if __name__ == "__main__":
     plt.savefig("results/robustness_stress_test.png", dpi=150, bbox_inches="tight")
     print(f"\n[primary seed {PRIMARY_SEED}] Saved results/robustness_stress_test.png")
 
-    # ---- Worst-case profiles for Vanilla, rarest first ----
+    # -- Worst-case profiles for Vanilla, rarest first --
     worst = [r for r in vanilla_results if not r["correct"] or r["any_violation"]]
     worst_sorted = sorted(worst, key=lambda r: r["prior_probability"])
     print(f"\n[primary seed {PRIMARY_SEED}] Vanilla DQN failure cases "
-          f"({len(worst)}/80), rarest profiles first:")
+          f"({len(worst)}/120), rarest profiles first:")
     for r in worst_sorted[:15]:
-        amb, br, pulse, cmd, dec, hazard = r["profile"]
+        amb, br, pulse, cmd, dec, hazard, tachy = r["profile"]
         print(f"  p={r['prior_probability']:.4f} | amb={amb} br={br} pulse={pulse} "
-              f"cmd={cmd} dec={dec} hazard={hazard} | "
+              f"cmd={cmd} dec={dec} hazard={hazard} tachy={tachy} | "
               f"correct_tag={r['correct_tag']} final_tag={r['final_tag']} "
               f"violation={r['any_violation']}")
 
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     # NEW 1: full action-by-action traces for KG-DQN's failure cases.
     #
     # run_single_patient() doesn't return the trace, but it also doesn't
-    # clear env.episode_log after it finishes -- reset_single_patient()
+    # clear env.episode_log after it finishes - reset_single_patient()
     # clears it at the START of each call, so reading env.episode_log
     # immediately after one run_single_patient() call gives exactly that
     # profile's full step-by-step log. We just re-run the (small number
@@ -224,67 +225,20 @@ if __name__ == "__main__":
     kg_failures = [r for r in kg_results if not r["correct"] or r["any_violation"]]
     if kg_failures:
         print(f"\n[primary seed {PRIMARY_SEED}] KG-DQN failure cases "
-              f"({len(kg_failures)}/80) -- full action traces:")
+              f"({len(kg_failures)}/120) - full action traces:")
         trace_env = MCIEnv(use_kg_constraint=True)
         for r in sorted(kg_failures, key=lambda r: r["prior_probability"]):
-            amb, br, pulse, cmd, dec, hazard = r["profile"]
+            amb, br, pulse, cmd, dec, hazard, tachy = r["profile"]
             run_single_patient(trace_env, primary_kg_model, True,
-                                amb, br, pulse, cmd, dec, hazard)
+                                amb, br, pulse, cmd, dec, hazard, tachy)
             trace = trace_env.episode_log
             print(f"\n  Profile: amb={amb} br={br} pulse={pulse} cmd={cmd} "
-                  f"dec={dec} hazard={hazard} (p={r['prior_probability']:.4f})")
+                  f"dec={dec} hazard={hazard} tachy={tachy} (p={r['prior_probability']:.4f})")
             print(f"  correct_tag={r['correct_tag']}  final_tag={r['final_tag']}")
             for i, entry in enumerate(trace):
                 print(f"    step {i+1}: action={entry['action']:<14} "
                       f"reward={entry['reward']:+.1f} kg_valid={entry['kg_valid']}")
     else:
-        print(f"\n[primary seed {PRIMARY_SEED}] KG-DQN had zero failures -- "
+        print(f"\n[primary seed {PRIMARY_SEED}] KG-DQN had zero failures - "
               "no action traces to show.")
 
-    # =================================================================
-    # NEW 2: budget-sensitivity check. Re-evaluate the SAME trained
-    # KG-DQN checkpoint (no retraining at all) against a larger
-    # per-patient action budget, purely at evaluation time. If the
-    # failing profiles above resolve correctly with more steps, the
-    # gap was a budget artifact; if they still never tag, it's a
-    # genuine generalization gap on rare states.
-    # =================================================================
-    LARGER_BUDGET = 8
-    print(f"\n[primary seed {PRIMARY_SEED}] Budget-sensitivity check: "
-          f"re-evaluating the SAME checkpoint with max_actions_per_patient="
-          f"{LARGER_BUDGET} (was 4), no retraining...")
-
-    budget_env = MCIEnv(use_kg_constraint=True, max_actions_per_patient=LARGER_BUDGET)
-    budget_results = [
-        run_single_patient(budget_env, primary_kg_model, True, *p)
-        for p in enumerate_all_profiles()
-    ]
-    summarize(budget_results, f"KG-DQN (masked, budget={LARGER_BUDGET})")
-    save_csv(budget_results, "results/robustness_kg_budget8.csv")
-
-    before_by_profile = {r["profile"]: r for r in kg_failures}
-    after_by_profile  = {r["profile"]: r for r in budget_results
-                          if r["profile"] in before_by_profile}
-
-    resolved = 0
-    for profile in sorted(before_by_profile,
-                           key=lambda p: before_by_profile[p]["prior_probability"]):
-        before = before_by_profile[profile]
-        after  = after_by_profile[profile]
-        newly_correct = after["correct"] and not before["correct"]
-        resolved += int(newly_correct)
-        print(f"  profile={profile} | budget=4 -> final_tag={before['final_tag']} "
-              f"(correct={before['correct']}) | budget={LARGER_BUDGET} -> "
-              f"final_tag={after['final_tag']} (correct={after['correct']})")
-
-    if kg_failures:
-        print(f"\n  => {resolved}/{len(kg_failures)} previously-failing profiles became "
-              f"correct purely from a larger action budget (same weights, no retraining).")
-        if resolved == len(kg_failures):
-            print("  Conclusion: the gap was a BUDGET ARTIFACT, not a genuine policy gap.")
-        elif resolved == 0:
-            print("  Conclusion: the gap is NOT explained by budget -- looks like a "
-                  "genuine generalization gap on rare states.")
-        else:
-            print("  Conclusion: partially budget-related -- some profiles resolve with "
-                  "more steps, others don't.")

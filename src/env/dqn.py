@@ -4,7 +4,7 @@ import random
 from collections import deque
 
 class DQN(nn.Module):
-    def __init__(self, state_dim=11, action_dim=7):  # updated: hazard one-hot + decon progress, + decontaminate action
+    def __init__(self, state_dim=12, action_dim=7):
         super(DQN, self).__init__()
         self.net = nn.Sequential(
             nn.Linear(state_dim, 64),

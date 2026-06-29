@@ -33,7 +33,7 @@ ACTION_INDIVIDUAL_MAP = {
 # Hazard type string (used by the patient generator / env) -> ontology
 # individual name. Hazard type only governs HOW LONG decontamination
 # takes (read directly off the individual, no reasoning) -- it is
-# orthogonal to the reasoner-validated 32-profile lookup table, which
+# orthogonal to the reasoner-validated 48-profile lookup table, which
 # only cares about the binary hasDecontaminationStatus.
 HAZARD_INDIVIDUAL_MAP = {
     "chemical":     "chemicalHazard",
@@ -65,8 +65,12 @@ _ONTO_PATH_CACHE = {}
 
 def load_ontology(owl_path: str):
     """Loads the ontology and eagerly warms the reasoner-backed lookup
-    table cache (runs Pellet once over all 32 profiles, executing both
-    the OWL-DL equivalentClass classification and the SWRL rule set)."""
+    table cache (runs Pellet once over all 48 profiles - the 64
+    enumerable 6-dimensional vital-sign combinations minus the 16
+    clinically incoherent "tachypneic while not breathing" cases -
+    executing both the OWL-DL equivalentClass classification and the
+    SWRL rule set)."""
+
     onto = _load_ontology_raw(owl_path)
     _ONTO_PATH_CACHE[id(onto)] = owl_path
     _table_for(owl_path)
