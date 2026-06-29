@@ -1,4 +1,4 @@
-# KG-DQN — External Validation (`TRIAGE_CrossValidation` branch)
+# KG-DQN — External Validation (`syn_STARTS_validation` branch)
 
 This branch extends [`main`](../../tree/main) with an **independent external validation** of the triage ontology against a structured, third-party triage scenario dataset (the **syn_STARTS** benchmark) — separate from, and additional to, the multi-seed RL robustness experiment reported in the paper's main results (Table 1).
 
