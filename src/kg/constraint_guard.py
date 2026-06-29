@@ -239,7 +239,6 @@ def _build_lookup_table(owl_path: str):
             valid.add(ACTION_TAG_EXPECTANT)
         else:
             valid.add(ACTION_TAG_IMMEDIATE)
-            valid.add(ACTION_TAG_EXPECTANT)
             if category == "Delayed":
                 valid.add(ACTION_TAG_DELAYED)
         valid.add(ACTION_OPEN_AIRWAY)
