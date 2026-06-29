@@ -4,7 +4,9 @@ import numpy as np
 HAZARD_TYPES = ["chemical", "biological", "radiological", "nuclear"]
 HAZARD_ONE_HOT_ORDER = HAZARD_TYPES  # canonical order used in state_to_obs
 
-OBS_DIM = 11  # 6 base features + 4 hazard one-hot + 1 decon progress
+OBS_DIM = 12  # 6 base features (incl. tachypnea) + 4 hazard one-hot + 1 decon progress
+
+P_TACHYPNEIC_GIVEN_BREATHING = 0.10  # see paper Section 3.3 for clinical justification
 
 
 def generate_patient(seed=None):
@@ -18,6 +20,18 @@ def generate_patient(seed=None):
     (via get_decontamination_duration) once the patient's ontology
     individual is created -- the generator only decides WHICH hazard,
     not how long it takes to resolve.
+
+    Tachypnea is drawn only for breathing patients (tachypneic-while-
+    not-breathing is clinically incoherent and excluded from the
+    ontology's own enumeration -- see constraint_guard.py). Per the
+    ontology's actual classification precedence (Section 3.1 of the
+    paper): ambulation overrides everything (Minor), and within the
+    non-ambulatory branch, tachypnea only acts as a tie-breaker for
+    patients who are otherwise breathing + pulse-present +
+    follows-commands -- the same branch that previously only had the
+    15% clinician-escalation noise. A tachypneic patient in that
+    branch is deterministically Immediate (START_rule3c_tachypnea_immediate),
+    not subject to the escalation roll.
     """
 
     if seed is not None:
@@ -28,6 +42,9 @@ def generate_patient(seed=None):
     pulse            = random.random() < 0.75
     follows_commands = random.random() < 0.6
     decontaminated   = random.random() < 0.6   # 40% arrive still contaminated
+
+    tachypneic = breathing and (random.random() < P_TACHYPNEIC_GIVEN_BREATHING)
+    respiratory_rate = (35 if tachypneic else 18) if breathing else None
 
     hazard_type = None
     if not decontaminated:
@@ -49,6 +66,9 @@ def generate_patient(seed=None):
     elif not follows_commands:
         correct_tag = "tag_immediate"
         desc = "not following commands"
+    elif tachypneic:
+        correct_tag = "tag_immediate"
+        desc = "stable vitals but tachypneic (RR>30)"
     else:
         if random.random() < 0.15:
             correct_tag = "tag_immediate"
@@ -66,6 +86,8 @@ def generate_patient(seed=None):
         "pulse":            pulse,
         "follows_commands": follows_commands,
         "decontaminated":   decontaminated,
+        "tachypneic":       tachypneic,
+        "respiratory_rate": respiratory_rate,
         "hazard_type":      hazard_type,
         "decon_steps_done": 0,
         "decon_duration":   1,     # placeholder; env overwrites via the ontology
@@ -96,6 +118,7 @@ def state_to_obs(state):
         int(state["follows_commands"]),
         int(state["decontaminated"]),
         int(state["is_treated"]),
+        int(state.get("tachypneic", False)),
         *hazard_one_hot,
         decon_progress,
     ], dtype=np.float32)

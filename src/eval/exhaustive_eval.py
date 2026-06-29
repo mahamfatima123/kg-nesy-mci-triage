@@ -1,27 +1,3 @@
-"""
-Shared exhaustive-evaluation logic for the 80 enumerable patient profiles.
-
-Used in two places:
-  - tests/tests_robustness.py: the actual reported stress-test numbers
-    used for the paper (CSVs, plots, failure-case listing).
-  - train/train_dqn.py: a periodic VALIDATION signal during training,
-    used to select the "best" checkpoint to save.
-
-These two MUST stay in sync, which is exactly why this logic lives in
-one shared place instead of being copy-pasted into both files.
-
-Why train_dqn.py needs this (and not just a rolling average over
-training episodes): training episodes are drawn from the realistic,
-skewed patient-prior distribution (Expectant patients are ~5% of all
-patients, further split across 5 hazard variants -- closer to ~1%
-each). A 20-episode validation window can simply contain zero or one
-Expectant patient by chance, letting a checkpoint that is actually bad
-at that category score a deceptively high training-time average just
-because it wasn't tested on it that window. Evaluating against the
-uniform 80-profile enumeration removes that sampling bias entirely --
-every category gets equal weight, every time, regardless of how rare
-it is in the wild.
-"""
 import itertools
 import numpy as np
 import torch
@@ -38,14 +14,25 @@ P_BREATHING        = 0.8
 P_PULSE            = 0.75
 P_FOLLOWS_COMMANDS = 0.6
 P_DECONTAMINATED   = 0.6
+P_TACHYPNEIC_GIVEN_BREATHING = 0.10
 P_HAZARD_GIVEN_CONTAMINATED = 1.0 / len(HAZARD_TYPES)
 
 
-def deterministic_correct_tag(ambulatory, breathing, pulse, follows_commands):
+def deterministic_correct_tag(ambulatory, breathing, pulse, follows_commands,
+                               tachypneic=False):
     """
     The clean START-protocol label, WITHOUT the 15% clinician-escalation
     noise used during training. This asks 'does the policy match the
-    protocol', not 'does it match the noisy signal it was trained on'.
+    protocol', not 'does it match the noisy training signal it was
+    trained on'.
+
+    Tachypnea (per the ontology's actual classification precedence,
+    Section 3.1 of the paper) only acts as a tie-breaker in the
+    otherwise-stable branch (breathing, pulse present, follows
+    commands): tachypneic -> Immediate, non-tachypneic -> Delayed.
+    Ambulation and the other Immediate-triggering conditions always
+    take precedence over tachypnea, matching the ontology's
+    equivalentClass definitions exactly.
     """
     if ambulatory:
         return "tag_minor"
@@ -57,11 +44,13 @@ def deterministic_correct_tag(ambulatory, breathing, pulse, follows_commands):
         return "tag_immediate"
     elif not follows_commands:
         return "tag_immediate"
+    elif tachypneic:
+        return "tag_immediate"
     else:
         return "tag_delayed"
 
 
-def profile_prior_probability(amb, br, pulse, cmd, dec, hazard):
+def profile_prior_probability(amb, br, pulse, cmd, dec, hazard, tachy=False):
     p = P_AMBULATORY if amb else 1 - P_AMBULATORY
     p *= P_BREATHING if br else 1 - P_BREATHING
     p *= P_PULSE if pulse else 1 - P_PULSE
@@ -69,17 +58,25 @@ def profile_prior_probability(amb, br, pulse, cmd, dec, hazard):
     p *= P_DECONTAMINATED if dec else 1 - P_DECONTAMINATED
     if not dec:
         p *= P_HAZARD_GIVEN_CONTAMINATED
+    if br:
+        p *= P_TACHYPNEIC_GIVEN_BREATHING if tachy else 1 - P_TACHYPNEIC_GIVEN_BREATHING
     return p
 
 
 def enumerate_all_profiles():
-    """All 80 enumerable initial patient states: 16 binary vital-sign
-    combinations x (clean, or contaminated with one of 4 hazard types)."""
+    """All 120 enumerable initial patient states: the 16 binary
+    vital-sign combinations, each further split by tachypnea status
+    when breathing (tachypneic-while-not-breathing is clinically
+    incoherent and excluded, matching constraint_guard.py's own
+    enumeration), crossed with (clean, or contaminated with one of 4
+    hazard types)."""
     profiles = []
     for amb, br, pulse, cmd in itertools.product([True, False], repeat=4):
-        profiles.append((amb, br, pulse, cmd, True, None))       # clean
-        for hazard in HAZARD_TYPES:                               # contaminated
-            profiles.append((amb, br, pulse, cmd, False, hazard))
+        tachy_options = [False, True] if br else [False]
+        for tachy in tachy_options:
+            profiles.append((amb, br, pulse, cmd, True, None, tachy))       # clean
+            for hazard in HAZARD_TYPES:                                     # contaminated
+                profiles.append((amb, br, pulse, cmd, False, hazard, tachy))
     return profiles
 
 
@@ -91,11 +88,12 @@ def greedy_action(model, obs, mask=None):
     return int(np.argmax(q_values))
 
 
-def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard):
-    correct_tag = deterministic_correct_tag(amb, br, pulse, cmd)
+def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard, tachy=False):
+    correct_tag = deterministic_correct_tag(amb, br, pulse, cmd, tachy)
     obs = env.reset_single_patient(
         ambulatory=amb, breathing=br, pulse=pulse, follows_commands=cmd,
         decontaminated=dec, hazard_type=hazard, correct_tag=correct_tag,
+        tachypneic=tachy,
     )
     kg_recommended = get_kg_recommended_action(env.onto, env.current_patient)
 
@@ -116,7 +114,7 @@ def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard
             final_tag = action_name
 
     return {
-        "profile":           (amb, br, pulse, cmd, dec, hazard),
+        "profile":           (amb, br, pulse, cmd, dec, hazard, tachy),
         "correct_tag":       correct_tag,
         "kg_recommended":    kg_recommended,
         "final_tag":         final_tag,
@@ -124,7 +122,7 @@ def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard
         "matches_kg":        final_tag == kg_recommended,
         "any_violation":     any_violation,
         "n_actions":         n_actions,
-        "prior_probability": profile_prior_probability(amb, br, pulse, cmd, dec, hazard),
+        "prior_probability": profile_prior_probability(amb, br, pulse, cmd, dec, hazard, tachy),
     }
 
 
@@ -136,7 +134,7 @@ def evaluate_exhaustive(model, use_masking, owl_path="ontology/triage_v2.rdf"):
 def exhaustive_accuracy(model, use_masking, owl_path="ontology/triage_v2.rdf"):
     """
     Lightweight summary used as a training-time validation score:
-    fraction of all 80 profiles correctly tagged (and, separately,
+    fraction of all 120 profiles correctly tagged (and, separately,
     fraction with any KG violation). Equal weight per profile --
     unlike training episodes, which follow the realistic (skewed)
     patient-prior distribution and can systematically under-sample

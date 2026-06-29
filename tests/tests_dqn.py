@@ -67,10 +67,12 @@ rand_kg_r, rand_kg_v, rand_kg_c = run_random(200, use_kg=True)
 
 print("="*65)
 print("=== TRAINING VANILLA DQN ===")
-van_r, van_v, van_c, van_kg = train(use_kg=False, episodes=500)
+van_r, van_v, van_c, van_kg, van_exh_acc_log, van_exh_viol_log = train(
+    use_kg=False, episodes=1500, save_path="results/_devtest_vanilla.pt")
 print("\n" + "="*65)
 print("=== TRAINING KG-CONSTRAINED DQN ===")
-kg_r,  kg_v,  kg_c,  kg_kg  = train(use_kg=True,  episodes=500)
+kg_r, kg_v, kg_c, kg_kg, kg_exh_acc_log, kg_exh_viol_log = train(
+    use_kg=True, episodes=1500, save_path="results/_devtest_kg.pt")
 
 
 # ── Summary table ────────────────────────────────────────────────
@@ -99,8 +101,45 @@ print(f"{'KG-DQN':<28} "
       f"{np.mean(kg_v):>12.2f}")
 
 print("="*75)
+print("Note: Vanilla's reward/correctness above looks favorable in part because")
+print("      its reward function never penalizes tagging a still-contaminated")
+print("      patient -- the -50 KG penalty only fires when use_kg_constraint=True.")
+print("      Vanilla's violation rate (Table below) is the metric that exposes this.")
 
-# ── KG-agreement summary (now meaningful — diverges from correct%) ─────────
+# ── Real, checkpoint-selected exhaustive accuracy (the trustworthy metric) ──
+import torch
+from src.env.dqn import DQN
+from src.eval.exhaustive_eval import exhaustive_accuracy
+
+probe_env = MCIEnv()
+state_dim  = probe_env.observation_space.shape[0]
+action_dim = probe_env.action_space.n
+
+van_model = DQN(state_dim, action_dim)
+van_model.load_state_dict(torch.load("results/_devtest_vanilla.pt"))
+van_model.eval()
+van_exh_acc, van_exh_viol = exhaustive_accuracy(van_model, use_masking=False)
+
+kg_model = DQN(state_dim, action_dim)
+kg_model.load_state_dict(torch.load("results/_devtest_kg.pt"))
+kg_model.eval()
+kg_exh_acc, kg_exh_viol = exhaustive_accuracy(kg_model, use_masking=True)
+
+print("\n" + "="*75)
+print("REAL CHECKPOINT ACCURACY (exhaustive 120-profile sweep, noise-free)")
+print("-"*75)
+print(f"{'Agent':<28} {'Exhaustive acc':>16} {'Exhaustive viol':>16}")
+print(f"{'Vanilla DQN':<28} {van_exh_acc*100:>15.1f}% {van_exh_viol*100:>15.1f}%")
+print(f"{'KG-DQN':<28} {kg_exh_acc*100:>15.1f}% {kg_exh_viol*100:>15.1f}%")
+print("="*75)
+print("Note: this is the noise-free, checkpoint-selected metric Table 1 reports.")
+print("      The 'Correct%' figures above are the noisy TRAINING-distribution")
+print("      signal (raw per-episode average, including label-escalation noise)")
+print("      and should not be compared directly to Table 1's headline numbers.")
+
+os.remove("results/_devtest_vanilla.pt")
+os.remove("results/_devtest_kg.pt")
+
 # ── KG-agreement summary ─────────────────────────────────────────
 print("\n" + "="*55)
 print(f"{'Agent':<28} {'KG-agree%':>15}")
@@ -114,72 +153,52 @@ print("Note: KG-agree diverges from Correct% due to 15% clinician-escalated")
 print("      borderline cases where ground truth overrides START protocol.")
 
 
-# ── Convergence ──────────────────────────────────────────────────
-def convergence_ep(rates, threshold=0.80, window=10):
-    smoothed = np.convolve(rates, np.ones(window)/window, mode='valid')
-    above = np.where(smoothed >= threshold)[0]
-    return above[0] + window if len(above) > 0 else None
-
-van_conv = convergence_ep(van_c)
-kg_conv  = convergence_ep(kg_c)
-
-print(f"\nConvergence to 80% correct tagging:")
-print(f"  Vanilla DQN : episode {van_conv or 'not reached'}")
-print(f"  KG-DQN      : episode {kg_conv  or 'not reached'}")
-if van_conv and kg_conv:
-    print(f"  KG-DQN converged {van_conv - kg_conv} episodes faster")
-
-
 # ── Plots ─────────────────────────────────────────────────────────────────────
 os.makedirs("results", exist_ok=True)
 
 def smooth(x, w=20):
     return np.convolve(x, np.ones(w)/w, mode='valid')
 
-rand_r_mean    = np.mean(rand_r)
-rand_kg_r_mean = np.mean(rand_kg_r)
-rand_v_mean    = np.mean(rand_v)
+rand_v_mean = np.mean(rand_v)
 rand_kg_v_mean = np.mean(rand_kg_v)
-rand_c_mean    = np.mean(rand_c)
-rand_kg_c_mean = np.mean(rand_kg_c)
 
 fig, axes = plt.subplots(1, 4, figsize=(20, 5))
 fig.suptitle("KG-DQN vs Vanilla DQN — Full Comparison", fontsize=13, fontweight='bold')
 
-# Plot 1: Episode reward
+# Plot 1: Exhaustive (noise-free) accuracy over training -- the metric
+# that actually matters, sampled every eval_every episodes via checkpoint
+# selection. Unlike the noisy training-distribution reward, this is
+# directly comparable across agents.
 ax = axes[0]
-ax.plot(smooth(van_r), color='steelblue',  lw=2, label='Vanilla DQN')
-ax.plot(smooth(kg_r),  color='darkorange', lw=2, label='KG-DQN')
-ax.axhline(rand_r_mean,    color='steelblue',  ls=':', alpha=0.6, label=f'Random ({rand_r_mean:.0f})')
-ax.axhline(rand_kg_r_mean, color='darkorange', ls=':', alpha=0.6, label=f'Random KG ({rand_kg_r_mean:.0f})')
-ax.set_title("Episode reward", fontweight='bold')
-ax.set_xlabel("Episode"); ax.set_ylabel("Total reward")
-ax.legend(fontsize=8); ax.grid(alpha=0.3)
-
-# Plot 2: Correct tag rate
-ax = axes[1]
-ax.plot(smooth(van_c), color='steelblue',  lw=2, label='Vanilla DQN')
-ax.plot(smooth(kg_c),  color='darkorange', lw=2, label='KG-DQN')
-ax.axhline(rand_c_mean,    color='steelblue',  ls=':', alpha=0.6, label=f'Random ({rand_c_mean*100:.0f}%)')
-ax.axhline(rand_kg_c_mean, color='darkorange', ls=':', alpha=0.6, label=f'Random KG ({rand_kg_c_mean*100:.0f}%)')
-ax.axhline(0.80, color='gray', ls='--', alpha=0.5, label='80% threshold')
-if van_conv: ax.axvline(van_conv, color='steelblue',  ls='--', alpha=0.4, label=f'Van ep {van_conv}')
-if kg_conv:  ax.axvline(kg_conv,  color='darkorange', ls='--', alpha=0.4, label=f'KG ep {kg_conv}')
-ax.set_title("Correct tag rate", fontweight='bold')
-ax.set_xlabel("Episode"); ax.set_ylabel("Fraction correct")
+van_eval_eps = np.arange(len(van_exh_acc_log)) * 20
+kg_eval_eps  = np.arange(len(kg_exh_acc_log)) * 20
+ax.plot(van_eval_eps, van_exh_acc_log, color='steelblue',  lw=2, marker='o', ms=3, label='Vanilla DQN')
+ax.plot(kg_eval_eps,  kg_exh_acc_log,  color='darkorange', lw=2, marker='o', ms=3, label='KG-DQN')
+ax.set_title("Exhaustive accuracy\n(checkpoint metric)", fontweight='bold', fontsize=11)
+ax.set_xlabel("Episode"); ax.set_ylabel("Fraction correct (120 profiles)")
 ax.set_ylim(0, 1.05); ax.legend(fontsize=8); ax.grid(alpha=0.3)
 
-# Plot 3: KG violations
+# Plot 2: Exhaustive (noise-free) violation rate over training -- same
+# x-axis as Plot 1, showing the safety gap directly on the metric that
+# matters, rather than the noisy training-distribution reward/correctness.
+ax = axes[1]
+ax.plot(van_eval_eps, van_exh_viol_log, color='steelblue',  lw=2, marker='o', ms=3, label='Vanilla DQN')
+ax.plot(kg_eval_eps,  kg_exh_viol_log,  color='darkorange', lw=2, marker='o', ms=3, label='KG-DQN')
+ax.set_title("Exhaustive violation rate\n(checkpoint metric)", fontweight='bold', fontsize=11)
+ax.set_xlabel("Episode"); ax.set_ylabel("Fraction with a violation (120 profiles)")
+ax.set_ylim(0, 1.05); ax.legend(fontsize=8); ax.grid(alpha=0.3)
+
+# Plot 3: KG violations per episode (training distribution)
 ax = axes[2]
 ax.plot(smooth(van_v), color='steelblue',  lw=2, label='Vanilla DQN')
 ax.plot(smooth(kg_v),  color='darkorange', lw=2, label='KG-DQN')
 ax.axhline(rand_v_mean,    color='steelblue', ls=':', lw=1.5, alpha=0.7, label=f'Random avg ({rand_v_mean:.1f})')
 ax.axhline(rand_kg_v_mean, color='red',       ls='--', lw=1.5, alpha=0.8, label=f'Random KG avg ({rand_kg_v_mean:.1f})')
-ax.set_title("KG violations per episode", fontweight='bold')
+ax.set_title("KG violations per episode\n(training distribution)", fontweight='bold', fontsize=11)
 ax.set_xlabel("Episode"); ax.set_ylabel("Violations")
 ax.legend(fontsize=8); ax.grid(alpha=0.3)
 
-# Plot 4: KG-agree vs Correct% gap — the new meaningful metric
+# Plot 4: KG-agree vs Correct% gap
 ax = axes[3]
 ax.plot(smooth(van_c),  color='steelblue',  lw=2, ls='-',  label='Vanilla correct%')
 ax.plot(smooth(van_kg), color='steelblue',  lw=2, ls='--', label='Vanilla KG-agree%')

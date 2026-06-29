@@ -27,7 +27,6 @@ def select_action(state, model, epsilon, action_dim, mask=None):
 
     return int(np.argmax(q_values))
 
-
 def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     random.seed(seed)
     np.random.seed(seed)
@@ -54,10 +53,12 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     epsilon_min   = 0.05
     epsilon_decay = 0.995
 
-    rewards_log      = []
-    violation_log    = []
-    correct_tag_log  = []
-    kg_agreement_log = []
+    rewards_log         = []
+    violation_log       = []
+    correct_tag_log     = []
+    kg_agreement_log    = []
+    exhaustive_acc_log  = []   # (every eval_every episodes)
+    exhaustive_viol_log = []
 
     # Track the BEST snapshot seen during training, scored by the
     # exhaustive 80-profile sweep (see eval_every below) -- not by a
@@ -144,10 +145,9 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
         if ep % eval_every == 0:
             target.load_state_dict(model.state_dict())
 
-            # Validate against the UNIFORM 80-profile enumeration, not
+            # Validate against the UNIFORM 120-profile enumeration, not
             # training episodes -- training episodes follow the
-            # realistic, skewed patient prior (Expectant patients are
-            # ~5% of all patients, ~1% per hazard variant), so a 20-
+            # realistic, skewed patient prior, so a 20-
             # episode window can simply miss a rare category by chance
             # and let a checkpoint that's actually bad at it score a
             # deceptively high "accuracy". Every profile gets equal
@@ -155,6 +155,9 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
             model.eval()
             exhaustive_acc, exhaustive_viol = exhaustive_accuracy(model, use_masking=use_kg)
             model.train()
+
+            exhaustive_acc_log.append(exhaustive_acc)
+            exhaustive_viol_log.append(exhaustive_viol)
 
             if exhaustive_acc > best_score:
                 best_score = exhaustive_acc
@@ -169,7 +172,7 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     if save_path is not None:
         save_state = best_state_dict if best_state_dict is not None else model.state_dict()
         torch.save(save_state, save_path)
-        print(f"Saved BEST checkpoint (exhaustive 80-profile accuracy "
+        print(f"Saved BEST checkpoint (exhaustive 120-profile accuracy "
               f"{best_score:.2f}) to {save_path}")
 
-    return rewards_log, violation_log, correct_tag_log, kg_agreement_log
+    return rewards_log, violation_log, correct_tag_log, kg_agreement_log, exhaustive_acc_log, exhaustive_viol_log

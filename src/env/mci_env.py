@@ -50,7 +50,7 @@ class MCIEnv(gym.Env):
 
     def __init__(self, owl_path="ontology/triage_v2.rdf",
                  use_kg_constraint=False, kg_penalty=-50.0,
-                 max_actions_per_patient=4, step_cost=0.5):
+                 max_actions_per_patient=5, step_cost=0.5):
         super().__init__()
 
         self.observation_space = spaces.Box(
@@ -82,27 +82,20 @@ class MCIEnv(gym.Env):
 
     def reset_single_patient(self, ambulatory, breathing, pulse, follows_commands,
                               decontaminated, hazard_type, correct_tag,
-                              description=None):
-        """
-        Bypasses the random generator to load one exact, caller-specified
-        patient, and puts the env into single-patient mode: the episode
-        ends as soon as this one patient is resolved (tagged, or the
-        action budget runs out) instead of loading 9 more random patients.
-
-        Used by exhaustive stress-test evaluation, which needs to
-        enumerate every possible patient profile deterministically
-        rather than relying on random sampling.
-        """
+                              tachypneic=False, description=None):
         self._single_patient_mode = True
         self.patients_seen = 0
         self.episode_log   = []
 
+        respiratory_rate = (35 if tachypneic else 18) if breathing else None
         self.current_state = {
             "ambulatory":       ambulatory,
             "breathing":        breathing,
             "pulse":            pulse,
             "follows_commands": follows_commands,
             "decontaminated":   decontaminated,
+            "tachypneic":       tachypneic,
+            "respiratory_rate": respiratory_rate,
             "hazard_type":      hazard_type,
             "decon_steps_done": 0,
             "decon_duration":   1,
@@ -117,8 +110,7 @@ class MCIEnv(gym.Env):
             self.onto, patient_id,
             ambulatory=ambulatory, breathing=breathing, pulse=pulse,
             follows_commands=follows_commands, decontaminated=decontaminated,
-            hazard_type=hazard_type,
-        )
+            hazard_type=hazard_type, respiratory_rate=respiratory_rate, )
         self.current_state["decon_duration"] = get_decontamination_duration(
             self.onto, self.current_patient
         )
@@ -127,21 +119,18 @@ class MCIEnv(gym.Env):
         return np.array(state_to_obs(self.current_state), dtype=np.float32)
 
     def _load_next_patient(self):
-        self.current_state, self.correct_tag = generate_patient()
-        patient_id = f"patient_{self.patients_seen}"
-        self.current_patient = create_patient(
-            self.onto, patient_id,
-            ambulatory       = self.current_state["ambulatory"],
-            breathing        = self.current_state["breathing"],
-            pulse            = self.current_state["pulse"],
-            follows_commands = self.current_state["follows_commands"],
-            decontaminated   = self.current_state["decontaminated"],
-            hazard_type      = self.current_state["hazard_type"],
-        )
-        self.current_state["decon_duration"] = get_decontamination_duration(
-            self.onto, self.current_patient
-        )
-        self.patient_action_count = 0
+            self.current_state, self.correct_tag = generate_patient()
+            patient_id = f"patient_{self.patients_seen}"
+            self.current_patient = create_patient(
+                self.onto, patient_id,
+                ambulatory       = self.current_state["ambulatory"],
+                breathing        = self.current_state["breathing"],
+                pulse            = self.current_state["pulse"],
+                follows_commands = self.current_state["follows_commands"],
+                decontaminated   = self.current_state["decontaminated"],
+                hazard_type      = self.current_state["hazard_type"],
+                respiratory_rate = self.current_state["respiratory_rate"],
+            )
 
     def _next_patient_or_done(self, last_reward):
         self.patients_seen += 1
