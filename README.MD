@@ -4,7 +4,7 @@ This repository contains the code, ontology, trained checkpoints, and evaluation
 
 > **In one sentence:** we encode the START mass-casualty triage protocol (plus CBRN decontamination rules) as a reasoner-validated OWL/SWRL ontology, and use it to *structurally* block a Deep Q-Network agent from ever taking a clinically unsafe action — instead of just penalizing unsafe actions and hoping the agent learns to avoid them.
 
-> **Branches:** this is `main` — the core system, ontology, and the multi-seed robustness experiment reported in the paper. A second branch, [`syn_STARTS_validation`](../../tree/syn_STARTS_validation), shares the same ontology and reasoner code and adds an independent external validation against a structured triage benchmark dataset (not part of the core paper experiment).
+> **Branches:** this is `main` — the core system, ontology, and the multi-seed robustness experiment reported in the paper. A second branch, [`syn_STARTS_validation`](../../tree/syn_STARTS_validation), shares the same ontology and reasoner code and adds an independent external validation against Syn-STARTS, a structured triage benchmark dataset (not part of the core paper experiment).
 
 ---
 
@@ -37,7 +37,7 @@ We compare two agents trained on identical patient scenarios:
 - **Vanilla DQN** — a standard Deep Q-Network. Wrong/unsafe actions are heavily penalized (–50 reward) but still *executable*.
 - **KG-DQN** — the same network architecture, but unsafe actions are removed from its choices entirely via the ontology-derived mask.
 
-We then test both **exhaustively** — not just on random episodes, but on *every one of the 80 possible patient profiles* the environment can generate — across three different random training seeds, to see whether the safety guarantee actually holds everywhere, and whether it costs anything in accuracy.
+We then test both **exhaustively** — not just on random episodes, but on *every one of the 120 possible patient profiles* the environment can generate (the 16 binary combinations of the four core vital signs, each split by tachypnea status when breathing, crossed with clean or one of four CBRN hazard types) — across three different random training seeds, to see whether the safety guarantee actually holds everywhere, and whether it costs anything in accuracy.
 
 ---
 
@@ -55,7 +55,7 @@ We then test both **exhaustively** — not just on random episodes, but on *ever
 │   ├── kg/
 │   │   └── constraint_guard.py    # Bridge between the ontology and Python; runs the reasoner
 │   └── eval/
-│       └── exhaustive_eval.py     # Defines and runs the 80-profile exhaustive test
+│       └── exhaustive_eval.py     # Defines and runs the 120-profile exhaustive test
 ├── train/
 │   ├── train_dqn.py               # The training loop for both agents
 │   └── random_agent.py            # Sanity-check baseline (acts completely randomly)
@@ -72,7 +72,6 @@ We then test both **exhaustively** — not just on random episodes, but on *ever
 └── README.MD                      # This file
 ```
 
-> `paper/` (containing `main.tex` and `references.bib`) is maintained separately and will be added to this tree once pushed.
 
 ---
 
@@ -98,7 +97,7 @@ If you're setting this up fresh, run things in this order — each step builds o
 2. **`python tests/tests_hazard.py`** — confirms the CBRN decontamination logic is wired correctly.
 3. **`python tests/tests_env.py`** — confirms the RL environment itself behaves correctly (action masking, rewards, multi-step decontamination).
 4. **`python tests/tests_dqn.py`** *(optional, quick)* — a fast single-seed sanity check that training runs end-to-end without crashing, and produces a first comparison plot.
-5. **`python tests/tests_robustness.py`** — **this is the real experiment.** Trains both agents three times (three random seeds), evaluates them exhaustively, and produces every number and figure reported in the paper. This takes a while — it trains six full models (Vanilla + KG-DQN, × 3 seeds, plus the budget-ablation re-evaluation).
+5. **`python tests/tests_robustness.py`** — **this is the real experiment.** Trains both agents three times (three random seeds), evaluates them exhaustively, and produces every number and figure reported in the paper. This takes a while — it trains six full models (Vanilla + KG-DQN, × 3 seeds).
 
 Steps 1–3 are fast (seconds to low minutes). Step 5 is the long one — budget real time for it.
 
@@ -109,7 +108,7 @@ Steps 1–3 are fast (seconds to low minutes). Step 5 is the long one — budget
 ### `ontology/triage_v2.rdf`
 
 This is **not Python code** — it's the knowledge graph itself, written in OWL/RDF (a formal logic format), editable visually in a tool called Protégé. It defines:
-- The four START categories (**Minor**, **Delayed**, **Immediate**, **Expectant**) as logical definitions over patient vitals (ambulation, breathing, respiratory rate / tachypnea, pulse, mental status, decontamination status) — not hardcoded rules, but formal class definitions a reasoner can derive conclusions from. This includes **START Rule 3** (respiratory rate > 30 → tachypneic → Immediate), encoded via a dedicated `hasRespiratoryRate` datatype property and `TachypneaStatus` class hierarchy, cross-checked by SWRL rules `START_rule3b_tachypnea` and `START_rule3c_tachypnea_immediate`.
+- The four START categories (**Minor**, **Delayed**, **Immediate**, **Expectant**) as logical definitions over patient vitals (ambulation, breathing, respiratory rate / tachypnea, pulse, mental status, decontamination status) — not hardcoded rules, but formal class definitions a reasoner can derive conclusions from. This includes **START Rule 3** (respiratory rate > 30 → tachypneic → Immediate), encoded via a dedicated `hasRespiratoryRate` datatype property and `TachypneaStatus` class hierarchy, cross-checked by SWRL rules `START_rule3b_tachypnea` and `START_rule3c_tachypnea_immediate`, with a `NOT tachypneic` guard on `START_rule6_delayed` to prevent conflicting `treatmentRequired` assertions.
 - Four CBRN hazard types (Chemical, Biological, Radiological, Nuclear), each with a required number of decontamination steps.
 - SWRL rules that *independently* compute a recommended treatment action and severity score, used to cross-check the formal class definitions agree with each other.
 
@@ -121,7 +120,7 @@ You won't run this file directly — every other file in `src/kg/` and `src/env/
 
 This is the bridge between the ontology file and your Python code. On load, it:
 1. Reads `triage_v2.rdf`.
-2. Runs the **Pellet reasoner** once, over all 64 possible patient profiles (6 binary dimensions: ambulatory, breathing, pulse, follows-commands, decontaminated, tachypneic — with the clinically incoherent "tachypneic but not breathing" combinations skipped), computing both the formal-logic classification *and* the SWRL-rule-based classification, and checking they agree (if they don't, it raises an error immediately rather than silently using bad data).
+2. Runs the **Pellet reasoner** once, over all 64 enumerable binary patient profiles (6 binary dimensions: ambulatory, breathing, pulse, follows-commands, decontaminated, tachypneic), of which **48 are clinically coherent** — the remaining 16 ("tachypneic while not breathing") are excluded as clinically meaningless. For each of the 48, it computes both the formal-logic classification *and* the SWRL-rule-based classification, and checks they agree (if they don't, it raises an error immediately rather than silently using bad data).
 3. Caches the result into a fast lookup table, so every later check during training/evaluation is just a dictionary lookup rather than re-running the reasoner each time.
 
 Exposes functions like `check_action()` (is this action allowed for this patient?) and `get_valid_actions()` (the full mask of allowed actions), used by the environment on every single step. `create_patient()` also accepts an optional `respiratory_rate` argument, which drives the tachypnea inference for any single patient created outside the lookup table.
@@ -130,31 +129,31 @@ Exposes functions like `check_action()` (is this action allowed for this patient
 
 ### `src/env/patient_generator.py`
 
-Generates one random simulated patient: random ambulatory/breathing/pulse/mental-status/decontamination status, plus a random CBRN hazard if contaminated, plus the "correct" ground-truth triage tag computed from the same START logic (with 15% of patients having their label randomly escalated, to simulate real-world clinician override/uncertainty).
+Generates one random simulated patient: random ambulatory/breathing/pulse/mental-status/decontamination status, plus tachypnea status (sampled conditionally on breathing), plus a random CBRN hazard if contaminated, plus the "correct" ground-truth triage tag computed from the same START logic (with 15% of otherwise-stable patients having their label stochastically escalated, to simulate real-world clinician override/uncertainty).
 
 ---
 
 ### `src/env/mci_env.py`
 
-The actual **Gymnasium environment** — the simulated "world." Each episode presents 10 patients in sequence. The agent has 7 possible actions per step (4 tagging actions that end a patient's turn, plus `open_airway`, `treat`, `decontaminate` which keep the same patient active for up to 4 actions). If `use_kg_constraint=True`, the action mask from `constraint_guard.py` is enforced — the agent cannot select a blocked action at all. If `False` (Vanilla mode), a blocked action is allowed but penalized –50.
+The actual **Gymnasium environment** — the simulated "world." Each episode presents 10 patients in sequence. The agent has 7 possible actions per step (4 tagging actions that end a patient's turn, plus `open_airway`, `treat`, `decontaminate` which keep the same patient active for up to **5** actions total). If `use_kg_constraint=True`, the action mask from `constraint_guard.py` is enforced — the agent cannot select a blocked action at all. If `False` (Vanilla mode), a blocked action is allowed but penalized –50.
 
 ---
 
 ### `src/env/dqn.py`
 
-The neural network itself: a small feed-forward network (11 inputs → 64 → 64 → 7 outputs) that estimates how good each of the 7 actions is in a given patient state, plus a replay buffer (a memory of past experience used to stabilize training, standard in DQN).
+The neural network itself: a small feed-forward network (**12 inputs** → 64 → 64 → 7 outputs) that estimates how good each of the 7 actions is in a given patient state, plus a replay buffer (a memory of past experience used to stabilize training, standard in DQN). The 12-dimensional observation is the five binary vital signs, a treated flag, a tachypnea flag, a one-hot hazard-type encoding, and a decontamination-progress fraction.
 
 ---
 
 ### `src/eval/exhaustive_eval.py`
 
-Defines the **80 enumerable patient profiles** (16 combinations of the 4 binary vital signs, × 5 contamination states: clean or one of 4 hazards) and runs a trained model against every single one, deterministically, recording whether it got the correct tag and whether it ever violated the ontology along the way. This is the rigorous evaluation — not a random sample, the *entire* space of possible initial patients.
+Defines the **120 enumerable patient profiles** — the 16 combinations of the four core binary vital signs, each further split by tachypnea status when breathing, crossed with five contamination states (clean, or one of four CBRN hazard types) — and runs a trained model against every single one, deterministically, recording whether it got the correct tag and whether it ever violated the ontology along the way. This is the rigorous evaluation — not a random sample, the *entire* space of possible initial patients.
 
 ---
 
 ### `train/train_dqn.py`
 
-The training loop. Standard epsilon-greedy DQN with a target network. The one important design choice: every 20 episodes, it checks the current network against the full 80-profile exhaustive set (not just a rolling average of recent training episodes) and only saves the checkpoint if that score improved. This prevents accidentally keeping a lucky-but-bad snapshot just because training happened to end at the right/wrong moment.
+The training loop. Standard epsilon-greedy DQN with a target network. The one important design choice: every 20 episodes, it checks the current network against the full 120-profile exhaustive set (not just a rolling average of recent training episodes) and only saves the checkpoint if that score improved. This prevents accidentally keeping a lucky-but-bad snapshot just because training happened to end at the right/wrong moment.
 
 ---
 
@@ -186,7 +185,7 @@ Each printed line states an expected value and the actual computed value side by
 
 **Run:** `python tests/tests_env.py`
 
-Tests the Gymnasium environment itself: correct observation shape, correct action-space size, that the KG-constrained mode actually blocks wrong actions (re-confirming `tests_kg.py`'s findings, but now through the environment rather than the ontology layer directly), and a full multi-step decontaminate-then-treat sequence.
+Tests the Gymnasium environment itself: correct observation shape (12-dimensional), correct action-space size, that the KG-constrained mode actually blocks wrong actions (re-confirming `tests_kg.py`'s findings, but now through the environment rather than the ontology layer directly), and a full multi-step decontaminate-then-treat sequence.
 
 ![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
 
@@ -206,7 +205,7 @@ The summary table compares four agents (Random, Random+KG, Vanilla DQN, KG-DQN) 
 
 ![Training dynamics figure](results/full_comparison.png)
 
-Four panels, left to right — episode reward over training, correct-tag rate over training, KG violations per episode (Vanilla descends slowly but never reaches zero; KG-DQN is flat at zero from the start), and the gap between raw accuracy and KG-agreement rate (reflecting the 15% noisy-label patients in the training data).
+This figure shows exhaustive accuracy and exhaustive violation rate (the noise-free, checkpoint-selection metric, sampled every 20 episodes) alongside KG violations per episode and the correct/KG-agreement gap on the noisy training distribution. KG-DQN's exhaustive violation rate is flat at 0 throughout, while Vanilla's stays well above zero and never improves. Note: the training-distribution panels can show the *reverse* ranking of the true result — this is expected (see Section 4.1 of the paper) and is exactly why checkpoint selection uses the exhaustive set, not the training-distribution rolling average.
 
 ---
 
@@ -216,12 +215,12 @@ Four panels, left to right — episode reward over training, correct-tag rate ov
 
 **This is the main event — the actual experiment reported in the paper.** For each of three random seeds (42, 43, 44):
 1. Trains a fresh Vanilla DQN and a fresh KG-DQN from scratch (500 episodes each).
-2. Evaluates both exhaustively against all 80 patient profiles.
+2. Evaluates both exhaustively against all 120 patient profiles.
 3. Confirms (via an `assert`) that KG-DQN's violation rate is exactly zero.
 
-After all three seeds, it reports the **multi-seed summary** (mean ± standard deviation accuracy and violation rate for each agent — the headline numbers in Table 1 of the paper), then does a **deep dive on the first seed only**: saves per-profile CSVs, generates a rarity-vs-correctness figure, lists every failing patient profile for both agents with full step-by-step action traces, and finally re-evaluates the same trained KG-DQN checkpoint with a larger action budget (8 instead of 4) — with no retraining — to check whether its remaining failures are a budget artifact or a genuine gap.
+After all three seeds, it reports the **multi-seed summary** (mean ± standard deviation accuracy and violation rate for each agent — the headline numbers in Table 1 of the paper), then does a **single-seed deep dive** on the primary seed only: per-profile CSVs, a rarity-vs-correctness/violation figure, a listing of every failing profile for Vanilla DQN, and full step-by-step action traces for any KG-DQN failures.
 
-This takes the longest to run of anything in this repo, since it trains six full models total (2 agents × 3 seeds) plus the extra budget re-evaluation.
+This takes the longest to run of anything in this repo, since it trains six full models total (2 agents × 3 seeds).
 
 ![Multi-seed summary table](terminal_outputs/tests_robustness_Seedsummary.png)
 
@@ -229,23 +228,19 @@ This table is the paper's Table 1. It reports, across the three seeds, mean ± s
 
 | Agent | Accuracy (mean ± std) | Violation rate (mean ± std) |
 |---|---|---|
-| Vanilla DQN | 91.2% ± 5.3% | 7.5% ± 5.4% |
-| KG-DQN | 97.1% ± 3.3% | 0.0% ± 0.0% |
+| Vanilla DQN | 91.7% ± 0.0% | 81.7% ± 0.0% |
+| KG-DQN | 98.3% ± 1.8% | 0.0% ± 0.0% |
 
-**KG-DQN's violation rate reads `0.0% ± 0.0%`** — zero average, zero spread, because it's mathematically guaranteed rather than empirically observed. Vanilla's numbers have real variance — this is expected and is itself part of the point: an unconstrained agent's safety is incidental to how training happened to go, not guaranteed.
+**KG-DQN's violation rate reads `0.0% ± 0.0%`** — zero average, zero spread, because it's mathematically guaranteed rather than empirically observed. Vanilla's accuracy and violation rate are identical across all three seeds (std 0.0 on both) — its policy converges to the same fixed failure set regardless of training seed, since the CBRN decontamination precondition applies to every tag action and nothing in its training objective ever penalizes tagging a still-contaminated patient.
 
 ![Vanilla failure cases](terminal_outputs/tests_robustness_vanillaDQN_failurecases.png)
 ![KG-DQN failure cases](terminal_outputs/tests_robustness_KGDQN_failurecases.png)
 
-This is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are, e.g. `p=0.0014`, confirming these are genuinely the rarest cases). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake. For KG-DQN, look for `final_tag=None` — this means the agent ran out of its 4-action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag failures, since no forbidden action was ever taken. For each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid. This is your explainability evidence — instead of saying "the agent stalled," you can point to the exact sequence (e.g., repeatedly selecting `open_airway` after it already took effect once, paying a redundancy penalty, then running out of budget) and explain precisely why it failed.
-
-![Budget sensitivity check](terminal_outputs/tests_robustness_budget_check.png)
-
-This re-tests the *same already-trained* KG-DQN model (no retraining at all) with double the action budget, to check if more "thinking time" alone would have fixed the failures above. The conclusion line at the end tells you the verdict directly: `0/N previously-failing profiles became correct purely from a larger action budget` means the problem is a genuine gap in what the model learned, not just an unfairly tight time limit.
+This is the failure-mode analysis (Section 4.2 of the paper). Each line lists one specific patient profile that an agent got wrong or violated the KG on, with its prior probability (how common that exact patient type is in the real-world training distribution — note how tiny these numbers are for the rarest categories). For Vanilla, look at the `correct_tag` vs `final_tag` columns — a mismatch here is a genuine wrong-answer mistake, and separately, look for tag actions taken on still-contaminated patients (a violation independent of whether the tag itself was correct). For KG-DQN, look for `final_tag=None` — this means the agent ran out of its action budget without ever tagging the patient (a "timeout"), which is a structurally safer failure than Vanilla's wrong-tag or contamination-precondition failures, since no forbidden action was ever taken. For each KG-DQN failure, you get a literal step-by-step replay: which action was taken, what reward it received, and whether it was KG-valid.
 
 ![Rarity vs. correctness/violation](results/robustness_stress_test.png)
 
-Two panels. Left: correctness as a function of how rare a patient profile is (rarest on the left) — both agents tend to dip on the rarest profiles. Right: violation rate as a function of rarity — **KG-DQN's line is flat at zero across the entire plot**, while Vanilla's line rises specifically in the rare region. This is the clearest single visual proof that the safety guarantee holds everywhere, not just on average.
+Two panels. Left: correctness as a function of how rare a patient profile is (rarest on the left) — Vanilla's correctness dips only in the rarest region (the Expectant-category profiles); KG-DQN's is flat at perfect correctness everywhere. Right: violation rate as a function of rarity — **KG-DQN's line is flat at zero across the entire plot**, while Vanilla's line stays high across nearly the entire rarity spectrum, confirming that contamination status — not how rare a profile's vital signs are — drives Vanilla's violations.
 
 ---
 
@@ -265,9 +260,14 @@ After running `tests_robustness.py`, your `results/` folder will contain:
 |---|---|
 | `vanilla_dqn_seed{42,43,44}.pt` / `kg_dqn_seed{42,43,44}.pt` | The best trained model weights for each agent, each seed |
 | `vanilla_dqn.pt` / `kg_dqn.pt` | Copies of the seed-42 ("primary seed") checkpoints, for any script that expects a fixed filename |
-| `robustness_vanilla.csv` / `robustness_kg.csv` | Per-profile results (all 80 rows) for the primary seed — every profile's correct tag, predicted tag, violation flag, etc. |
-| `robustness_kg_budget8.csv` | Same, but for the budget-sensitivity re-evaluation |
+| `robustness_vanilla.csv` / `robustness_kg.csv` | Per-profile results (all 120 rows) for the primary seed — every profile's correct tag, predicted tag, violation flag, etc. |
 | `robustness_stress_test.png` | The rarity-vs-correctness/violation figure (Figure 1 in the paper) |
-| `full_comparison.png` | The training-dynamics figure from `tests_dqn.py` (Figure 2 in the paper) |
+| `full_comparison.png` | The training-dynamics figure (Figure 2 in the paper) |
 
 These CSVs and PNGs are what's referenced in the paper's acknowledgments section as supporting evidence for every reported number.
+
+---
+
+## Acknowledgments
+
+Developed as part of doctoral research at HAW Hamburg, Faculty of Life Sciences, in collaboration with ongoing work on AI-supported maritime CBRN emergency response.
