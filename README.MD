@@ -184,10 +184,11 @@ Tests the Gymnasium environment itself: correct observation shape (12-dimensiona
 
 <table>
   <tr>
-    <td><img src="terminal_outputs/tests_env_1.png" width="480"/></td>
-    <td><img src="terminal_outputs/tests_env_2.png" width="480"/></td>
+    <td><img src="terminal_outputs/tests_env_1.png" width="750"/></td>
+    <td><img src="terminal_outputs/tests_env_2.png" width="750"/></td>
   </tr>
 </table>
+
 ---
 
 ### `tests/tests_dqn.py`
