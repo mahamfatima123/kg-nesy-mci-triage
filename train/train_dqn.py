@@ -27,16 +27,15 @@ def select_action(state, model, epsilon, action_dim, mask=None):
 
     return int(np.argmax(q_values))
 
-def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
+
+# AFTER
+def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):    
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
 
     env = MCIEnv(use_kg_constraint=use_kg)
 
-    # Derive dims from the env instead of hardcoding -- this is what
-    # broke last time the observation/action space grew, so the env is
-    # now the single source of truth for both.
     state_dim  = env.observation_space.shape[0]
     action_dim = env.action_space.n
 
@@ -57,13 +56,9 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     violation_log       = []
     correct_tag_log     = []
     kg_agreement_log    = []
-    exhaustive_acc_log  = []   # (every eval_every episodes)
+    exhaustive_acc_log  = []
     exhaustive_viol_log = []
 
-    # Track the BEST snapshot seen during training, scored by the
-    # exhaustive 80-profile sweep (see eval_every below) -- not by a
-    # rolling average over training episodes, which follow the skewed
-    # patient-prior distribution and can under-sample rare categories.
     best_score      = -float("inf")
     best_state_dict = None
 
@@ -71,18 +66,17 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
         state, _ = env.reset()
         done = False
 
-        ep_reward    = 0
+        ep_reward     = 0
         ep_violations = 0
-        ep_correct   = 0
-        ep_tags      = 0
-        ep_kg_agree  = 0
-        ep_kg_total  = 0
+        ep_correct    = 0
+        ep_tags       = 0
+        ep_kg_agree   = 0
+        ep_kg_total   = 0
 
         while not done:
             mask   = env.get_valid_action_mask() if use_kg else None
             action = select_action(state, model, epsilon, action_dim, mask)
 
-            # ── KG agreement: checked BEFORE step so current_patient is correct ──
             action_name = INDEX_ACTION[action]
             if action_name.startswith("tag_"):
                 kg_rec = get_kg_recommended_action(env.onto, env.current_patient)
@@ -90,7 +84,7 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
                     ep_kg_total += 1
                     if action_name == kg_rec:
                         ep_kg_agree += 1
-            # ─────────────────────────────────────────────────────────────────────
+
             next_state, reward, done, _, info = env.step(action)
 
             if not env.episode_log[-1]["kg_valid"]:
@@ -119,13 +113,6 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
                 loss.backward()
                 optimizer.step()
 
-        # Correct tag rate from episode log. IMPORTANT: the denominator
-        # is the total number of patients presented this episode
-        # (env.EPISODE_LENGTH), not just the ones that received a tag
-        # action. A patient who times out without ever being tagged
-        # must count as incorrect, not be silently excluded -- otherwise
-        # a policy that times out on hard patients but nails the easy
-        # ones it does reach can score a misleadingly high "accuracy".
         for entry in env.episode_log:
             if entry["action"].startswith("tag_"):
                 ep_tags += 1
@@ -133,7 +120,7 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
                     ep_correct += 1
 
         correct_rate  = ep_correct  / env.EPISODE_LENGTH
-        kg_agree_rate = ep_kg_agree / ep_kg_total  if ep_kg_total  > 0 else 0.0
+        kg_agree_rate = ep_kg_agree / ep_kg_total if ep_kg_total > 0 else 0.0
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
 
@@ -145,34 +132,28 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
         if ep % eval_every == 0:
             target.load_state_dict(model.state_dict())
 
-            # Validate against the UNIFORM 120-profile enumeration, not
-            # training episodes -- training episodes follow the
-            # realistic, skewed patient prior, so a 20-
-            # episode window can simply miss a rare category by chance
-            # and let a checkpoint that's actually bad at it score a
-            # deceptively high "accuracy". Every profile gets equal
-            # weight here, every time.
             model.eval()
-            exhaustive_acc, exhaustive_viol = exhaustive_accuracy(model, use_masking=use_kg)
+            exhaustive_acc, exhaustive_viol = exhaustive_accuracy(
+                model, use_masking=use_kg)
             model.train()
 
             exhaustive_acc_log.append(exhaustive_acc)
             exhaustive_viol_log.append(exhaustive_viol)
 
             if exhaustive_acc > best_score:
-                best_score = exhaustive_acc
+                best_score      = exhaustive_acc
                 best_state_dict = copy.deepcopy(model.state_dict())
-
-            print(f"EP {ep:>3} | Reward: {ep_reward:>8.2f} | "
-                  f"Correct: {correct_rate:.2f} | "
-                  f"KG-agree: {kg_agree_rate:.2f} | "
-                  f"Violations: {ep_violations} | Eps: {epsilon:.2f} | "
-                  f"Exhaustive-acc: {exhaustive_acc:.2f} (viol {exhaustive_viol:.2f})")
 
     if save_path is not None:
         save_state = best_state_dict if best_state_dict is not None else model.state_dict()
         torch.save(save_state, save_path)
-        print(f"Saved BEST checkpoint (exhaustive 120-profile accuracy "
-              f"{best_score:.2f}) to {save_path}")
 
-    return rewards_log, violation_log, correct_tag_log, kg_agreement_log, exhaustive_acc_log, exhaustive_viol_log
+    # Return the best model object directly so callers never need
+    # to save and reload from disk just to evaluate it.
+    best_model = DQN(state_dim=state_dim, action_dim=action_dim).to(device)
+    best_model.load_state_dict(
+        best_state_dict if best_state_dict is not None else model.state_dict())
+    best_model.eval()
+
+    return (rewards_log, violation_log, correct_tag_log, kg_agreement_log,
+            exhaustive_acc_log, exhaustive_viol_log, best_model)
