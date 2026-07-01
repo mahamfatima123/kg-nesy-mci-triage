@@ -25,7 +25,7 @@ def test_full_episode_no_kg():
                "(no KG constraint)")
     env = MCIEnv(use_kg_constraint=False)
     obs, _ = env.reset()
-    assert obs.shape == (11,), f"Wrong obs shape: {obs.shape}"
+    assert obs.shape == (12,), f"Wrong obs shape: {obs.shape}"
     assert env.action_space.n == 7
 
     done, steps, total_reward = False, 0, 0
