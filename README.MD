@@ -182,8 +182,12 @@ Confirms the CBRN hazard/decontamination-duration wiring specifically: that nucl
 
 Tests the Gymnasium environment itself: correct observation shape (12-dimensional), correct action-space size, that the KG-constrained mode blocks wrong actions, and a full multi-step decontaminate-then-treat sequence.
 
-![Terminal output of tests_env.py](terminal_outputs/tests_env.png)
-
+<table>
+  <tr>
+    <td><img src="terminal_outputs/tests_env_1.png" width="480"/></td>
+    <td><img src="terminal_outputs/tests_env_2.png" width="480"/></td>
+  </tr>
+</table>
 ---
 
 ### `tests/tests_dqn.py`
@@ -210,8 +214,12 @@ The key thing to confirm: **KG-DQN's violation rate is always exactly 0.0** — 
 
 After all three seeds, reports the multi-seed summary (paper's Table 1), saves per-profile CSVs, generates Figure 1, and prints full action traces for any KG-DQN failures (paper's Table 6).
 
-![Terminal output of tests_robustness.py](terminal_outputs/tests_robustness_all_seeds.png)
-![Terminal output of tests_robustness.py](terminal_outputs/tests_robustness_seed_summary_failure_cases.png)
+<table>
+  <tr>
+    <td><img src="terminal_outputs/tests_robustness_all_seeds.png" width="480"/></td>
+    <td><img src="terminal_outputs/tests_robustness_seed_summary_failure_cases.png" width="480"/></td>
+  </tr>
+</table>
 
 ![Rarity vs. correctness/violation](results/robustness_stress_test.png)
 
