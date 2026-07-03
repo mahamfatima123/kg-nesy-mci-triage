@@ -147,7 +147,7 @@ if __name__ == "__main__":
         ax.grid(axis="y", color=GRID_COLOR, linewidth=0.8, zorder=0)
         ax.set_axisbelow(True)
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5.3), dpi=150)
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.3), dpi=200)
 
     ax = axes[0]
     ax.plot(rolling(van_correct_flags), color=COLOR_VANILLA, lw=2.2, label="Vanilla DQN")
@@ -181,7 +181,7 @@ if __name__ == "__main__":
 
     fig.tight_layout(rect=[0, 0.06, 1, 0.94])
     fig.subplots_adjust(wspace=0.28)
-    fig.savefig("results/robustness_stress_test.png", dpi=150, bbox_inches="tight")
+    fig.savefig("results/robustness_stress_test.png", dpi=200, bbox_inches="tight")
     print(f"Saved results/robustness_stress_test.png (Figure 1 in paper).")
 
     # ── KG-DQN failure traces (Table 6 in paper) ─────────────────────
