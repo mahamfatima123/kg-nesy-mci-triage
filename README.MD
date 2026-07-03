@@ -46,4 +46,12 @@ Of the 2,000 raw scenarios, **348 had all required fields mechanically derivable
 | Black (Expectant) | 2/2 |
 | **Overall** | **348/348 (100.0%)** |
 
+![Why Syn-STARTS scenarios are excluded, by category](results/syn_starts_exclusion_reasons.png)
+
+*Each category is bottlenecked by a different missing field: Green
+scenarios mostly lack a reported respiratory rate, Red and Black
+scenarios mostly lack perfusion data (pulse/capillary refill), and
+Yellow scenarios are almost never excluded — which is why Yellow
+dominates the overall 630 scoreable count.*
+
 This is a real, reasoner-derived result on every scoreable case — not a sample. Given the perfect score, it's worth double-checking the conversion rule against the gold-labeling process before citing this number, to confirm no field used in conversion is also used (directly or indirectly) to derive the gold label itself.

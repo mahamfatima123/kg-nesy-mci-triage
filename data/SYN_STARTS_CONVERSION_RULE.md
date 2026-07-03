@@ -18,9 +18,14 @@ conversions below succeed; otherwise it is excluded, not guessed.
 - Else: not derivable, case excluded.
 
 ## pulse
-`vitals_info.perfusion.radial_pulse_present` (boolean) → used directly
-as `pulse`. If `perfusion` key or `radial_pulse_present` subfield is
-absent, not derivable, case excluded.
+- If `perfusion.radial_pulse_present` is present (boolean): used
+  directly as `pulse`.
+- Else if `perfusion.capillary_refill_seconds` is present (numeric):
+  `pulse = (capillary_refill_seconds <= 2)`. Capillary refill and
+  radial pulse are both perfusion checks defined in the original
+  START protocol; a refill of 2 seconds or less is normal perfusion,
+  matching pulse-present.
+- Else: not derivable, case excluded.
 
 ## follows_commands
 `vitals_info.mental_status.obeys_commands` (boolean) → used directly as
