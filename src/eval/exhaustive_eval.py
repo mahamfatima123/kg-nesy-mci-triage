@@ -20,20 +20,7 @@ P_HAZARD_GIVEN_CONTAMINATED = 1.0 / len(HAZARD_TYPES)
 
 def deterministic_correct_tag(ambulatory, breathing, pulse, follows_commands,
                                tachypneic=False):
-    """
-    The clean START-protocol label, WITHOUT the 15% clinician-escalation
-    noise used during training. This asks 'does the policy match the
-    protocol', not 'does it match the noisy training signal it was
-    trained on'.
 
-    Tachypnea (per the ontology's actual classification precedence,
-    Section 3.1 of the paper) only acts as a tie-breaker in the
-    otherwise-stable branch (breathing, pulse present, follows
-    commands): tachypneic -> Immediate, non-tachypneic -> Delayed.
-    Ambulation and the other Immediate-triggering conditions always
-    take precedence over tachypnea, matching the ontology's
-    equivalentClass definitions exactly.
-    """
     if ambulatory:
         return "tag_minor"
     elif not breathing and not pulse:
@@ -64,12 +51,7 @@ def profile_prior_probability(amb, br, pulse, cmd, dec, hazard, tachy=False):
 
 
 def enumerate_all_profiles():
-    """All 120 enumerable initial patient states: the 16 binary
-    vital-sign combinations, each further split by tachypnea status
-    when breathing (tachypneic-while-not-breathing is clinically
-    incoherent and excluded, matching constraint_guard.py's own
-    enumeration), crossed with (clean, or contaminated with one of 4
-    hazard types)."""
+
     profiles = []
     for amb, br, pulse, cmd in itertools.product([True, False], repeat=4):
         tachy_options = [False, True] if br else [False]
@@ -81,11 +63,22 @@ def enumerate_all_profiles():
 
 
 def greedy_action(model, obs, mask=None):
+ 
     state_t = torch.FloatTensor(obs).unsqueeze(0).to(device)
     q_values = model(state_t).detach().cpu().numpy()[0]
+
+    unmasked_argmax = int(np.argmax(q_values))
+
     if mask is not None:
-        q_values[~mask] = -1e9
-    return int(np.argmax(q_values))
+        masked_q = q_values.copy()
+        masked_q[~mask] = -1e9
+        action = int(np.argmax(masked_q))
+        shadow_violation = not bool(mask[unmasked_argmax])
+    else:
+        action = unmasked_argmax
+        shadow_violation = False
+
+    return action, shadow_violation
 
 
 def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard, tachy=False):
@@ -99,12 +92,15 @@ def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard
 
     done = False
     any_violation = False
+    n_shadow_violations = 0
     n_actions = 0
     final_tag = None
 
     while not done:
         mask = env.get_valid_action_mask() if use_masking else None
-        action = greedy_action(model, obs, mask)
+        action, shadow_violation = greedy_action(model, obs, mask)
+        if shadow_violation:
+            n_shadow_violations += 1
         obs, reward, done, _, _ = env.step(action)
         n_actions += 1
         if not env.episode_log[-1]["kg_valid"]:
@@ -114,15 +110,17 @@ def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard
             final_tag = action_name
 
     return {
-        "profile":           (amb, br, pulse, cmd, dec, hazard, tachy),
-        "correct_tag":       correct_tag,
-        "kg_recommended":    kg_recommended,
-        "final_tag":         final_tag,
-        "correct":           final_tag == correct_tag,
-        "matches_kg":        final_tag == kg_recommended,
-        "any_violation":     any_violation,
-        "n_actions":         n_actions,
-        "prior_probability": profile_prior_probability(amb, br, pulse, cmd, dec, hazard, tachy),
+        "profile":               (amb, br, pulse, cmd, dec, hazard, tachy),
+        "correct_tag":           correct_tag,
+        "kg_recommended":        kg_recommended,
+        "final_tag":             final_tag,
+        "correct":               final_tag == correct_tag,
+        "matches_kg":            final_tag == kg_recommended,
+        "any_violation":         any_violation,
+        "n_shadow_violations":   n_shadow_violations,
+        "any_shadow_violation":  n_shadow_violations > 0,
+        "n_actions":             n_actions,
+        "prior_probability":     profile_prior_probability(amb, br, pulse, cmd, dec, hazard, tachy),
     }
 
 
@@ -132,16 +130,10 @@ def evaluate_exhaustive(model, use_masking, owl_path="ontology/OWL_Ontology.rdf"
 
 
 def exhaustive_accuracy(model, use_masking, owl_path="ontology/OWL_Ontology.rdf"):
-    """
-    Lightweight summary used as a training-time validation score:
-    fraction of all 120 profiles correctly tagged (and, separately,
-    fraction with any KG violation). Equal weight per profile --
-    unlike training episodes, which follow the realistic (skewed)
-    patient-prior distribution and can systematically under-sample
-    rare categories.
-    """
+
     results = evaluate_exhaustive(model, use_masking, owl_path=owl_path)
     n = len(results)
     n_correct = sum(r["correct"] for r in results)
     n_violations = sum(r["any_violation"] for r in results)
-    return n_correct / n, n_violations / n
+    n_shadow = sum(r["any_shadow_violation"] for r in results)
+    return n_correct / n, n_violations / n, n_shadow / n

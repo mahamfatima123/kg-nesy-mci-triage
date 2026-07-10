@@ -1,0 +1,351 @@
+<svg viewBox="0 0 1500 1780" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1500" height="1780" fill="#f8fafc"/>
+
+  <!-- HEADER -->
+  <rect x="0" y="0" width="1500" height="92" fill="#0f172a"/>
+  <text x="40" y="40" font-size="25" font-weight="bold" fill="#ffffff">Triage Ontology Overview - OWL_Ontology.rdf</text>
+  <text x="40" y="66" font-size="14" fill="#94a3b8">START mass-casualty triage protocol + CBRN decontamination extension, encoded in OWL/RDF with SWRL rules, cross-validated by a Pellet reasoner</text>
+
+  <!-- STAT STRIP -->
+  <g font-family="Arial, Helvetica, sans-serif">
+    <g transform="translate(40,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#4f46e5">30</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">OWL Classes</text>
+    </g>
+    <g transform="translate(285,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#0d9488">11</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">Object Properties</text>
+    </g>
+    <g transform="translate(530,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#d97706">3</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">Data Properties</text>
+    </g>
+    <g transform="translate(775,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#e11d48">27</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">Named Individuals</text>
+    </g>
+    <g transform="translate(1020,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#7c3aed">9</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">SWRL Rules</text>
+    </g>
+    <g transform="translate(1265,110)">
+      <rect width="225" height="92" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="112" y="42" text-anchor="middle" font-size="30" font-weight="bold" fill="#334155">42</text>
+      <text x="112" y="66" text-anchor="middle" font-size="12.5" fill="#475569">rdfs:comment annotations</text>
+    </g>
+  </g>
+
+  <!-- SECTION 1 -->
+  <text x="40" y="245" font-size="18" font-weight="bold" fill="#0f172a">1 · Four START assessment dimensions (each a disjoint-pair class)</text>
+
+  <!-- Dimension boxes -->
+  <g>
+    <!-- Ambulation -->
+    <g transform="translate(40,262)">
+      <rect width="350" height="150" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <rect width="350" height="30" rx="10" fill="#334155"/>
+      <rect y="20" width="350" height="10" fill="#334155"/>
+      <text x="175" y="20" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">AmbulationStatus</text>
+      <rect x="14" y="42" width="150" height="26" rx="13" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="89" y="59" text-anchor="middle" font-size="11.5" fill="#166534">Ambulatory</text>
+      <text x="185" y="59" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+      <rect x="200" y="42" width="136" height="26" rx="13" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="268" y="59" text-anchor="middle" font-size="11" fill="#334155">NonAmbulatory</text>
+      <text x="175" y="114" font-size="11.5" fill="#475569" text-anchor="middle">Rule 1: Ambulatory ⇒ treatmentRequired = tagMinor,</text>
+      <text x="175" y="130" font-size="11.5" fill="#475569" text-anchor="middle">hasSeverityScore = 0</text>
+    </g>
+
+    <!-- Respiratory / Tachypnea -->
+    <g transform="translate(410,262)">
+      <rect width="350" height="150" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <rect width="350" height="30" rx="10" fill="#334155"/>
+      <rect y="20" width="350" height="10" fill="#334155"/>
+      <text x="175" y="20" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">RespiratoryStatus / TachypneaStatus</text>
+      <rect x="14" y="42" width="150" height="24" rx="12" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="89" y="58" text-anchor="middle" font-size="11" fill="#166534">Breathing</text>
+      <text x="185" y="58" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+      <rect x="200" y="42" width="136" height="24" rx="12" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="268" y="58" text-anchor="middle" font-size="10.5" fill="#334155">NotBreathing</text>
+      <rect x="14" y="72" width="150" height="24" rx="12" fill="#fee2e2" stroke="#dc2626"/>
+      <text x="89" y="88" text-anchor="middle" font-size="10.5" fill="#7f1d1d">Tachypneic (RR&gt;30)</text>
+      <text x="185" y="88" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+      <rect x="200" y="72" width="136" height="24" rx="12" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="268" y="88" text-anchor="middle" font-size="10" fill="#334155">NotTachypneic (≤30)</text>
+      <text x="175" y="114" font-size="11.5" fill="#475569" text-anchor="middle">hasRespiratoryRate builtins (Rules 3b/3d)</text>
+      <text x="175" y="130" font-size="11.5" fill="#475569" text-anchor="middle">derive Tachypnea</text>
+    </g>
+
+    <!-- Pulse -->
+    <g transform="translate(780,262)">
+      <rect width="350" height="150" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <rect width="350" height="30" rx="10" fill="#334155"/>
+      <rect y="20" width="350" height="10" fill="#334155"/>
+      <text x="175" y="20" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">PulseStatus</text>
+      <rect x="14" y="42" width="150" height="26" rx="13" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="89" y="59" text-anchor="middle" font-size="11" fill="#166534">PulsePresent</text>
+      <text x="185" y="59" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+      <rect x="200" y="42" width="136" height="26" rx="13" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="268" y="59" text-anchor="middle" font-size="11" fill="#334155">PulseAbsent</text>
+      <text x="175" y="114" font-size="11.5" fill="#475569" text-anchor="middle">Required condition for tag_delayed eligibility</text>
+      <text x="175" y="130" font-size="11.5" fill="#475569" text-anchor="middle">(START Rule 3 dimension)</text>
+    </g>
+
+    <!-- Mental status -->
+    <g transform="translate(1150,262)">
+      <rect width="350" height="150" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+      <rect width="350" height="30" rx="10" fill="#334155"/>
+      <rect y="20" width="350" height="10" fill="#334155"/>
+      <text x="175" y="20" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">MentalStatus</text>
+      <rect x="14" y="42" width="160" height="26" rx="13" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="94" y="59" text-anchor="middle" font-size="10.5" fill="#166534">FollowsCommands</text>
+      <text x="192" y="59" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+      <rect x="206" y="42" width="130" height="26" rx="13" fill="#f1f5f9" stroke="#64748b"/>
+      <text x="271" y="59" text-anchor="middle" font-size="9.5" fill="#334155">DoesNotFollowCmds</text>
+      <text x="175" y="114" font-size="11.5" fill="#475569" text-anchor="middle">Rule 4/5: DoesNotFollowCommands blocks tag_delayed</text>
+      <text x="175" y="130" font-size="11.5" fill="#475569" text-anchor="middle">&amp; tag_minor, forces tag_immediate</text>
+    </g>
+  </g>
+
+<line x1="215" y1="412" x2="215" y2="452" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="585" y1="412" x2="585" y2="452" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="955" y1="412" x2="955" y2="452" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<line x1="1325" y1="412" x2="1325" y2="452" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- REASONER BOX -->
+  <g transform="translate(40,452)">
+    <rect width="1460" height="52" rx="10" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.5"/>
+    <text x="730" y="24" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#312e81">Pellet Reasoner — cross-validates two independent inference paths</text>
+    <text x="730" y="42" text-anchor="middle" font-size="12" fill="#4338ca">DL classification (owl:equivalentClass) vs. SWRL-rule inference (treatmentRequired + hasSeverityScore), over 48 clinically-coherent profiles</text>
+  </g>
+
+  <line x1="215" y1="504" x2="215" y2="540" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="585" y1="504" x2="585" y2="540" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="955" y1="504" x2="955" y2="540" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1325" y1="504" x2="1325" y2="540" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- PRIORITY OUTCOME CARDS -->
+  <g transform="translate(40,540)">
+    <rect width="350" height="170" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+    <rect width="350" height="34" rx="10" fill="#16a34a"/>
+    <rect y="22" width="350" height="12" fill="#16a34a"/>
+    <text x="175" y="23" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">Minor (green)</text>
+    <text x="14" y="52" font-size="11.5" font-weight="bold" fill="#334155">START Rule 1: </text>
+    <text x="14" y="70" font-size="11.5" fill="#334155">Ambulatory</text>
+    <text x="175" y="98" font-size="11.5" font-weight="bold" fill="#166534" text-anchor="middle">requiresAction: tagMinor</text>
+    <text x="14" y="116" font-size="11.5" fill="#334155">hasSeverityScore = 0</text>
+    <text x="14" y="140" font-size="11" fill="#64748b">contraindicates: tagImmediate,</text>
+    <text x="14" y="155" font-size="11" fill="#64748b">tagExpectant</text>
+  </g>
+
+  <g transform="translate(410,540)">
+    <rect width="350" height="170" rx="10" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5"/>
+    <rect width="350" height="34" rx="10" fill="#ca8a04"/>
+    <rect y="22" width="350" height="12" fill="#ca8a04"/>
+    <text x="175" y="23" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">Delayed (yellow)</text>
+    <text x="14" y="52" font-size="11.5" font-weight="bold" fill="#334155">START Rule 6: </text>
+    <text x="14" y="70" font-size="10.7" fill="#334155">NonAmb ∧ Breathing ∧ PulsePresent</text>
+    <text x="14" y="85" font-size="10.7" fill="#334155">∧ FollowsCommands ∧ NotTachypneic</text>
+    <text x="175" y="108" font-size="11.5" font-weight="bold" fill="#854d0e" text-anchor="middle">requiresAction: tagDelayed</text>
+    <text x="14" y="126" font-size="11.5" fill="#334155">hasSeverityScore = 1</text>
+    <text x="14" y="150" font-size="11" fill="#64748b">contraindicates: tagExpectant</text>
+  </g>
+
+  <g transform="translate(780,540)">
+    <rect width="350" height="170" rx="10" fill="#ffffff" stroke="#dc2626" stroke-width="1.5"/>
+    <rect width="350" height="34" rx="10" fill="#dc2626"/>
+    <rect y="22" width="350" height="12" fill="#dc2626"/>
+    <text x="175" y="23" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">Immediate (red)</text>
+    <text x="14" y="52" font-size="11.5" font-weight="bold" fill="#334155">START Rules 3, 4, 5, 3c: </text>
+    <text x="14" y="70" font-size="10.7" fill="#334155">NonAmb ∧ (NotBreathing+Pulse ∨</text>
+    <text x="14" y="85" font-size="10.7" fill="#334155">PulseAbsent ∨ ¬FollowsCmds ∨ Tachypneic)</text>
+    <text x="175" y="108" font-size="11.5" font-weight="bold" fill="#991b1b" text-anchor="middle">requiresAction: tagImmediate</text>
+    <text x="14" y="126" font-size="11.5" fill="#334155">hasSeverityScore = 2</text>
+    <text x="14" y="150" font-size="11" fill="#64748b">may escalate from Delayed (safe)</text>
+  </g>
+
+  <g transform="translate(1150,540)">
+    <rect width="350" height="170" rx="10" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="350" height="34" rx="10" fill="#1e293b"/>
+    <rect y="22" width="350" height="12" fill="#1e293b"/>
+    <text x="175" y="23" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">Expectant (black)</text>
+    <text x="14" y="52" font-size="11.5" font-weight="bold" fill="#334155">START Rule 2: </text>
+    <text x="14" y="70" font-size="10.7" fill="#334155">NonAmb ∧ NotBreathing ∧ PulseAbsent</text>
+    <text x="175" y="98" font-size="11.5" font-weight="bold" fill="#0f172a" text-anchor="middle">requiresAction: tagExpectant</text>
+    <text x="14" y="116" font-size="11.5" fill="#334155">hasSeverityScore = 3</text>
+    <text x="14" y="140" font-size="11" fill="#64748b">sole permitted tag; no escalation</text>
+    <text x="14" y="155" font-size="11" fill="#64748b">or de-escalation across this boundary</text>
+  </g>
+
+  <!-- SECTION 2: CBRN -->
+  <text x="40" y="748" font-size="18" font-weight="bold" fill="#0f172a">2 · CBRN decontamination extension</text>
+
+  <g transform="translate(40,765)">
+    <rect width="715" height="200" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <rect width="715" height="30" rx="10" fill="#334155"/>
+    <rect y="20" width="715" height="10" fill="#334155"/>
+    <text x="350" y="20" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">DecontaminationStatus  +  RequiresDecontaminationFirst</text>
+    <rect x="150" y="60" width="170" height="26" rx="13" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="235" y="77" text-anchor="middle" font-size="11" fill="#166534">Decontaminated</text>
+    <text x="360" y="77" text-anchor="middle" font-size="11" fill="#94a3b8">⊥</text>
+    <rect x="400" y="60" width="170" height="26" rx="13" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="485" y="77" text-anchor="middle" font-size="10.5" fill="#7f1d1d">NotDecontaminated</text>
+    <text x="350" y="140" font-size="12" fill="#334155" text-anchor="middle">CBRN Rule 5: a NotDecontaminated patient is equivalent to class RequiresDecontaminationFirst.</text>
+    <text x="351" y="160" font-size="12" font-weight="bold" fill="#991b1b" text-anchor="middle">Action 'treat' AND all four tag_* actions are contraindicated until decontamination completes.</text>
+    <text x="350" y="180" font-size="11.5" fill="#475569" text-anchor="middle">Only openAirway and decontaminate remain unconditionally available regardless of status.</text>
+  </g>
+
+  <g transform="translate(775,765)">
+    <rect width="685" height="200" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <rect width="685" height="30" rx="10" fill="#334155"/>
+    <rect y="20" width="685" height="10" fill="#334155"/>
+    <text x="14" y="20" font-size="13" font-weight="bold" fill="#ffffff">HazardType — 4 disjoint subclasses (owl:AllDisjointClasses)</text>
+
+    <g transform="translate(14,50)">
+      <rect width="155" height="65" rx="8" fill="#fef9c3" stroke="#ca8a04"/>
+      <text x="77" y="22" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#713f12">ChemicalHazard</text>
+      <text x="77" y="38.5" text-anchor="middle" font-size="11" fill="#713f12">hasDecontaminationDuration</text>
+      <text x="77" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#713f12">= 1 action</text>
+    </g>
+    <g transform="translate(179,50)">
+      <rect width="155" height="65" rx="8" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="77" y="22" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#14532d">BiologicalHazard</text>
+      <text x="77" y="38.5" text-anchor="middle" font-size="11" fill="#14532d">hasDecontaminationDuration</text>
+      <text x="77" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#14532d">= 2 actions</text>
+    </g>
+    <g transform="translate(344,50)">
+      <rect width="155" height="65" rx="8" fill="#e0e7ff" stroke="#4f46e5"/>
+      <text x="77" y="22" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#312e81">RadiologicalHazard</text>
+      <text x="77" y="38.5" text-anchor="middle" font-size="11" fill="#312e81">hasDecontaminationDuration</text>
+      <text x="77" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#312e81">= 2 actions</text>
+    </g>
+    <g transform="translate(509,50)">
+      <rect width="155" height="65" rx="8" fill="#fee2e2" stroke="#dc2626"/>
+      <text x="77" y="22" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#7f1d1d">NuclearHazard</text>
+      <text x="77" y="38.5" text-anchor="middle" font-size="11" fill="#7f1d1d">hasDecontaminationDuration</text>
+      <text x="77" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#7f1d1d">= 3 actions</text>
+    </g>
+    <text x="350" y="140" font-size="12" fill="#334155" text-anchor="middle">hasHazardType : Patient → HazardType Duration determines repeated 'decontaminate'</text>
+    <text x="350" y="160" font-size="12" fill="#334155" text-anchor="middle">action-calls needed before treatment may begin.</text>
+    <text x="350" y="180" font-size="12" fill="#334155" text-anchor="middle">Also disjoint from all TriagePriority classes.</text>
+    <text x="14" y="188" font-size="11.5" fill="#64748b"></text>
+  </g>
+
+  <!-- SECTION 3: Actions -->
+  <text x="40" y="1010" font-size="18" font-weight="bold" fill="#0f172a">3 · TreatmentAction inventory (7 individuals) and contraindicates edges</text>
+
+  <g transform="translate(40,1028)" font-size="11.5">
+    <rect x="0" y="0" width="150" height="42" rx="21" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="75" y="26" text-anchor="middle" fill="#7f1d1d" font-weight="bold">tagImmediate</text>
+
+    <rect x="185" y="0" width="150" height="42" rx="21" fill="#fef9c3" stroke="#ca8a04"/>
+    <text x="260" y="26" text-anchor="middle" fill="#713f12" font-weight="bold">tagDelayed</text>
+
+    <rect x="370" y="0" width="150" height="42" rx="21" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="445" y="26" text-anchor="middle" fill="#166534" font-weight="bold">tagMinor</text>
+
+    <rect x="555" y="0" width="160" height="42" rx="21" fill="#e2e8f0" stroke="#334155"/>
+    <text x="635" y="26" text-anchor="middle" fill="#1e293b" font-weight="bold">tagExpectant</text>
+
+    <rect x="750" y="0" width="150" height="42" rx="21" fill="#e0e7ff" stroke="#4f46e5"/>
+    <text x="825" y="26" text-anchor="middle" fill="#312e81" font-weight="bold">openAirway</text>
+
+    <rect x="935" y="0" width="150" height="42" rx="21" fill="#e0e7ff" stroke="#4f46e5"/>
+    <text x="1010" y="26" text-anchor="middle" fill="#312e81" font-weight="bold">treat</text>
+
+    <rect x="1120" y="0" width="180" height="42" rx="21" fill="#e0e7ff" stroke="#4f46e5"/>
+    <text x="1210" y="26" text-anchor="middle" fill="#312e81" font-weight="bold">decontaminate</text>
+
+    <path d="M 445,42 C 445,80 260,80 260,42" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <text x="352" y="92" text-anchor="middle" font-size="10.5" fill="#64748b">contraindicates</text>
+    <path d="M 445,42 C 445,88 75,88 75,42" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <path d="M 260,42 C 260,66 635,66 635,42" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+    <path d="M 445,42 C 445,100 635,100 635,42" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="730" y="1150" font-size="12" fill="#64748b" text-anchor="middle">contraindicates is an owl:SymmetricProperty on TreatmentAction. 'treat' and all four tag_* actions are additionally blocked</text>
+  <text x="730" y="1168" font-size="12" fill="#64748b" text-anchor="middle">by decontamination state (Section 2) - a separate, orthogonal contraindication not shown as an edge above.</text>
+
+  <!-- SECTION 4: SWRL rules -->
+  <text x="40" y="1210" font-size="18" font-weight="bold" fill="#0f172a">4 · SWRL rule catalog — all 9 rules, isRuleEnabled = true</text>
+
+  <g transform="translate(40,1228)">
+    <rect width="1420" height="34" fill="#e2e8f0"/>
+    <text x="16" y="22" font-size="12" font-weight="bold" fill="#334155" >Rule label</text>
+    <text x="330" y="22" font-size="12" font-weight="bold" fill="#334155">Body (SWRL condition)</text>
+    <text x="1060" y="22" font-size="12" font-weight="bold" fill="#334155">Head (inferred)</text>
+  </g>
+
+  <g font-size="11.5" fill="#334155">
+    <!-- row template height 46 starting y=1262 -->
+    <g transform="translate(40,1262)">
+      <rect width="1420" height="44" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#16a34a">START_rule1_minor</text>
+      <text x="330" y="27">Patient(p) ∧ hasAmbulationStatus(p,s) ∧ Ambulatory(s)</text>
+      <text x="1060" y="27">treatmentRequired = tagMinor, severity = 0</text>
+    </g>
+    <g transform="translate(40,1306)">
+      <rect width="1420" height="44" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#1e293b">START_rule2_expectant</text>
+      <text x="330" y="27">NonAmbulatory ∧ hasRespiratoryStatus = NotBreathing ∧ hasPulseStatus=PulseAbsent</text>
+      <text x="1060" y="27">treatmentRequired = tagExpectant, severity = 3</text>
+    </g>
+    <g transform="translate(40,1350)">
+      <rect width="1420" height="44" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#dc2626">START_rule3_immediate_no_breath</text>
+      <text x="330" y="27">NonAmbulatory ∧ NotBreathing ∧ PulsePresent</text>
+      <text x="1060" y="27">treatmentRequired = tagImmediate, severity = 2</text>
+    </g>
+    <g transform="translate(40,1394)">
+      <rect width="1420" height="44" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#dc2626">START_rule4_immediate_no_pulse</text>
+      <text x="330" y="27">NonAmbulatory ∧ Breathing ∧ PulseAbsent</text>
+      <text x="1060" y="27">treatmentRequired = tagImmediate, severity = 2</text>
+    </g>
+    <g transform="translate(40,1438)">
+      <rect width="1420" height="44" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#dc2626">START_rule5_immediate_no_commands</text>
+      <text x="330" y="27">NonAmbulatory ∧ Breathing ∧ PulsePresent ∧ DoesNotFollowCommands</text>
+      <text x="1060" y="27">treatmentRequired = tagImmediate, severity = 2</text>
+    </g>
+    <g transform="translate(40,1482)">
+      <rect width="1420" height="44" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#7c3aed">START_rule3b_tachypnea</text>
+      <text x="330" y="27">Patient(p) ∧ hasRespiratoryRate(p,rate) ∧ swrlb:greaterThan(rate,30)</text>
+      <text x="1060" y="27">hasTachypneaStatus = tachypneic</text>
+    </g>
+    <g transform="translate(40,1526)">
+      <rect width="1420" height="44" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#dc2626">START_rule3c_tachypnea_immediate</text>
+      <text x="330" y="27">NonAmbulatory ∧ Breathing ∧ hasTachypneaStatus = Tachypneic</text>
+      <text x="1060" y="27">treatmentRequired = tagImmediate, severity = 2</text>
+    </g>
+    <g transform="translate(40,1570)">
+      <rect width="1420" height="44" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#7c3aed">START_rule3d_not_tachypneic</text>
+      <text x="330" y="27">Patient(p) ∧ hasRespiratoryRate(p,rate2) ∧ swrlb:lessThanOrEqual(rate2,30)</text>
+      <text x="1060" y="27">hasTachypneaStatus = notTachypneic</text>
+    </g>
+    <g transform="translate(40,1614)">
+      <rect width="1420" height="44" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="16" y="27" font-weight="bold" fill="#ca8a04">START_rule6_delayed</text>
+      <text x="330" y="27">NonAmbulatory ∧ Breathing ∧ PulsePresent ∧ FollowsCommands ∧ NotTachypneic</text>
+      <text x="1060" y="27">treatmentRequired = tagDelayed, severity = 1</text>
+    </g>
+  </g>
+
+  <!-- FOOTER -->
+  <rect x="0" y="1690" width="1500" height="90" fill="#0f172a"/>
+  <text x="40" y="1732" font-size="12.5" fill="#cbd5e1">2 × owl:AllDisjointClasses axioms (HazardType subclasses; TriagePriority classes) enforce mutual exclusivity beyond pairwise disjointness.</text>
+  <text x="40" y="1752" font-size="12.5" fill="#cbd5e1">Internally cross-validated (DL vs. SWRL, 48/48 profiles agree) and externally validated against Syn-STARTS: 630/630 (100.0%) label agreement on all mechanically-scoreable scenarios, before compilation into the RL agent's per-state action mask.</text>
+</svg>

@@ -124,27 +124,64 @@ if __name__ == "__main__":
     def rolling(x, w=8):
         return np.convolve(x, np.ones(w) / w, mode="valid")
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = [
+        "Libertinus Serif", "Linux Libertine",
+        "Times New Roman", "Cambria", "Georgia",
+        "Liberation Serif", "DejaVu Serif",
+    ]
+    plt.rcParams["mathtext.fontset"] = "stix"
+
+    COLOR_VANILLA = "#7FA6D6"   # matches "breathing" blue from the other figure
+    COLOR_KG      = "#F0A868"   # matches "pulse" orange
+    COLOR_VIOL    = "#D98880"   # matches "ambulatory" red
+    GRID_COLOR    = "#E5E5E5"
+    SPINE_COLOR   = "#CCCCCC"
+    TEXT_COLOR    = "#444444"
+
+    def style_axis(ax):
+        for spine in ["top", "right", "left"]:
+            ax.spines[spine].set_visible(False)
+        ax.spines["bottom"].set_color(SPINE_COLOR)
+        ax.tick_params(axis="both", length=0, colors=TEXT_COLOR)
+        ax.grid(axis="y", color=GRID_COLOR, linewidth=0.8, zorder=0)
+        ax.set_axisbelow(True)
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.3), dpi=200)
 
     ax = axes[0]
-    ax.plot(rolling(van_correct_flags), color="steelblue",  lw=2, label="Vanilla DQN")
-    ax.plot(rolling(kg_correct_flags),  color="darkorange", lw=2, label="KG-DQN")
-    ax.set_title("Correctness vs. profile rarity\n"
-                 "(left = rarest, right = most common)")
-    ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)")
-    ax.set_ylabel("Fraction correct")
-    ax.set_ylim(0, 1.05); ax.legend(); ax.grid(alpha=0.3)
+    ax.plot(rolling(van_correct_flags), color=COLOR_VANILLA, lw=2.2, label="Vanilla DQN")
+    ax.plot(rolling(kg_correct_flags),  color=COLOR_KG,      lw=2.2, label="KG-DQN")
+    ax.set_title("Correctness vs. profile rarity", fontsize=13,
+                 fontweight="bold", color="#222222", pad=28, loc="left")
+    ax.text(0, 1.06, "left = rarest, right = most common",
+            transform=ax.transAxes, fontsize=9.5, color="#666666", ha="left")
+    ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)",
+                  fontsize=10, color=TEXT_COLOR, labelpad=8)
+    ax.set_ylabel("Fraction correct", fontsize=10.5, color=TEXT_COLOR)
+    ax.set_ylim(0, 1.15)
+    style_axis(ax)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2,
+              frameon=False, fontsize=9.5, handlelength=1.4)
 
     ax = axes[1]
-    ax.plot(rolling(van_violation_flags), color="crimson",    lw=2, label="Vanilla DQN")
-    ax.axhline(0, color="darkorange", lw=2, linestyle="-", label="KG-DQN (always 0)")
-    ax.set_title("Safety violations vs. profile rarity")
-    ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)")
-    ax.set_ylabel("Fraction with a violation")
-    ax.legend(); ax.grid(alpha=0.3)
+    ax.plot(rolling(van_violation_flags), color=COLOR_VIOL, lw=2.2, label="Vanilla DQN")
+    ax.axhline(0, color=COLOR_KG, lw=2.2, linestyle="-", label="KG-DQN (always 0)")
+    ax.set_title("Safety violations vs. profile rarity", fontsize=13,
+                 fontweight="bold", color="#222222", pad=28, loc="left")
+    ax.text(0, 1.06, "left = rarest, right = most common",
+            transform=ax.transAxes, fontsize=9.5, color="#666666", ha="left")
+    ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)",
+                  fontsize=10, color=TEXT_COLOR, labelpad=8)
+    ax.set_ylabel("Fraction with a violation", fontsize=10.5, color=TEXT_COLOR)
+    ax.set_ylim(-0.05, 1.15)
+    style_axis(ax)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2,
+              frameon=False, fontsize=9.5, handlelength=1.4)
 
-    plt.tight_layout()
-    plt.savefig("results/robustness_stress_test.png", dpi=150, bbox_inches="tight")
+    fig.tight_layout(rect=[0, 0.06, 1, 0.94])
+    fig.subplots_adjust(wspace=0.28)
+    fig.savefig("results/robustness_stress_test.png", dpi=200, bbox_inches="tight")
     print(f"Saved results/robustness_stress_test.png (Figure 1 in paper).")
 
     # ── KG-DQN failure traces (Table 6 in paper) ─────────────────────
