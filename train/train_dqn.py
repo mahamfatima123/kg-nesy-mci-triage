@@ -13,23 +13,34 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def select_action(state, model, epsilon, action_dim, mask=None):
+
     if random.random() < epsilon:
         if mask is not None:
             valid_actions = np.where(mask)[0]
-            return int(np.random.choice(valid_actions))
-        return random.randint(0, action_dim - 1)
+            action = int(np.random.choice(valid_actions))
+        else:
+            action = random.randint(0, action_dim - 1)
+        return action, False
 
     state_t = torch.FloatTensor(state).unsqueeze(0).to(device)
     q_values = model(state_t).detach().cpu().numpy()[0]
 
-    if mask is not None:
-        q_values[~mask] = -1e9
+    unmasked_argmax = int(np.argmax(q_values))
 
-    return int(np.argmax(q_values))
+    if mask is not None:
+        masked_q = q_values.copy()
+        masked_q[~mask] = -1e9
+        action = int(np.argmax(masked_q))
+        shadow_violation = not bool(mask[unmasked_argmax])
+    else:
+        action = unmasked_argmax
+        shadow_violation = False
+
+    return action, shadow_violation
 
 
 # AFTER
-def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):    
+def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -52,12 +63,14 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     epsilon_min   = 0.05
     epsilon_decay = 0.995
 
-    rewards_log         = []
-    violation_log       = []
-    correct_tag_log     = []
-    kg_agreement_log    = []
-    exhaustive_acc_log  = []
-    exhaustive_viol_log = []
+    rewards_log          = []
+    violation_log        = []
+    shadow_violation_log = []   
+    correct_tag_log      = []
+    kg_agreement_log     = []
+    exhaustive_acc_log   = []
+    exhaustive_viol_log  = []
+    exhaustive_shadow_log = []  
 
     best_score      = -float("inf")
     best_state_dict = None
@@ -68,14 +81,17 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
 
         ep_reward     = 0
         ep_violations = 0
+        ep_shadow     = 0   # NEW
         ep_correct    = 0
         ep_tags       = 0
         ep_kg_agree   = 0
         ep_kg_total   = 0
 
         while not done:
-            mask   = env.get_valid_action_mask() if use_kg else None
-            action = select_action(state, model, epsilon, action_dim, mask)
+            mask = env.get_valid_action_mask() if use_kg else None
+            action, shadow_violation = select_action(state, model, epsilon, action_dim, mask)
+            if shadow_violation:
+                ep_shadow += 1
 
             action_name = INDEX_ACTION[action]
             if action_name.startswith("tag_"):
@@ -126,6 +142,7 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
 
         rewards_log.append(ep_reward)
         violation_log.append(ep_violations)
+        shadow_violation_log.append(ep_shadow)   # NEW
         correct_tag_log.append(correct_rate)
         kg_agreement_log.append(kg_agree_rate)
 
@@ -133,12 +150,13 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
             target.load_state_dict(model.state_dict())
 
             model.eval()
-            exhaustive_acc, exhaustive_viol = exhaustive_accuracy(
+            exhaustive_acc, exhaustive_viol, exhaustive_shadow = exhaustive_accuracy(
                 model, use_masking=use_kg)
             model.train()
 
             exhaustive_acc_log.append(exhaustive_acc)
             exhaustive_viol_log.append(exhaustive_viol)
+            exhaustive_shadow_log.append(exhaustive_shadow)   # NEW
 
             if exhaustive_acc > best_score:
                 best_score      = exhaustive_acc
@@ -156,4 +174,5 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
     best_model.eval()
 
     return (rewards_log, violation_log, correct_tag_log, kg_agreement_log,
-            exhaustive_acc_log, exhaustive_viol_log, best_model)
+            exhaustive_acc_log, exhaustive_viol_log,
+            shadow_violation_log, exhaustive_shadow_log, best_model)

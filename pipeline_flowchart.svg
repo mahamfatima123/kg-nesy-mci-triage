@@ -1,0 +1,93 @@
+<svg viewBox="0 0 1510 430" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Validate-then-constrain pipeline (compact horizontal)</title>
+<desc>Ontology and SWRL rules are internally cross-validated, then externally validated against Syn-STARTS, then compiled into an action mask that constrains a DQN agent (KG-DQN) versus an unconstrained Vanilla DQN, both evaluated exhaustively.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M0,0 L10,5 L0,10 z" fill="#444444"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1600" height="470" fill="#FFFFFF"/>
+
+<!-- Input pill -->
+<rect x="20" y="218" width="170" height="64" rx="32" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="1.5"/>
+<text x="105" y="242" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">Ontology</text>
+<text x="105" y="263" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">OWL/RDF + SWRL</text>
+
+<line x1="190" y1="250" x2="238" y2="250" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Stage 1: internal cross-validation -->
+<rect x="240" y="215" width="200" height="76" rx="10" fill="#FDF3E7" stroke="#F0A868" stroke-width="1.5"/>
+<text x="340" y="248" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">1. Cross-validate</text>
+<text x="340" y="268" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">DL vs. SWRL (48 profiles)</text>
+<text x="340" y="185" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">Internally</text>
+<text x="340" y="201" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">coherent?</text>
+
+<line x1="440" y1="250" x2="488" y2="250" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Diamond: Agree? -->
+<polygon points="545,225 600,250 545,275 490,250" fill="#FFFFFF" stroke="#444444" stroke-width="1.5"/>
+<text x="545" y="255" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">Agree?</text>
+
+<!-- No branch to error box (down) -->
+<line x1="545" y1="275" x2="545" y2="326" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="555" y="300" text-anchor="start" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-style="italic" fill="#888888">no</text>
+<rect x="460" y="328" width="170" height="54" rx="8" fill="#FBE8E6" stroke="#D98880" stroke-width="1.5"/>
+<text x="545" y="350" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#A33B31">Diagnostic error</text>
+<text x="545" y="368" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#A33B31">(load fails)</text>
+
+<!-- Yes branch continues right -->
+<line x1="600" y1="250" x2="648" y2="250" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="620" y="240" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" font-style="italic" fill="#888888">yes</text>
+
+<!-- Stage 2: external validation -->
+<rect x="650" y="201" width="220" height="98" rx="10" fill="#FDF3E7" stroke="#F0A868" stroke-width="1.5"/>
+<text x="755" y="228" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">2. External check</text>
+<text x="755" y="250" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">vs. Syn-STARTS</text>
+<rect x="675" y="262" width="160" height="26" rx="13" fill="#F0A868"/>
+<text x="755" y="280" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="#FFFFFF">630/630 &#183; 100%</text>
+<text x="755" y="175" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">Externally</text>
+<text x="755" y="191" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">correct?</text>
+
+<line x1="870" y1="250" x2="918" y2="250" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Stage 3: compile to action mask -->
+<rect x="920" y="212" width="180" height="76" rx="10" fill="#F2F2F2" stroke="#CCCCCC" stroke-width="1.5"/>
+<text x="1010" y="243" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">3. Compile mask</text>
+<text x="1010" y="265" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" fill="#555555">action lookup table</text>
+
+<!-- Split stub -->
+<line x1="1100" y1="250" x2="1130" y2="250" stroke="#444444" stroke-width="1.5"/>
+<line x1="1130" y1="130" x2="1130" y2="370" stroke="#444444" stroke-width="1.5"/>
+<line x1="1130" y1="130" x2="1158" y2="130" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="1130" y1="370" x2="1158" y2="370" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="1220" y="68" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">Safe to</text>
+<text x="1220" y="84" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-style="italic" fill="#888888">enforce?</text>
+
+<!-- Stage 4: KG-DQN (above) vs Vanilla DQN (below) -->
+<rect x="1160" y="100" width="130" height="60" rx="8" fill="#FDF3E7" stroke="#F0A868" stroke-width="1.5"/>
+<text x="1225" y="128" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">KG-DQN</text>
+<text x="1225" y="145" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">masked</text>
+
+<rect x="1160" y="340" width="130" height="60" rx="8" fill="#EAF1FA" stroke="#7FA6D6" stroke-width="1.5"/>
+<text x="1225" y="367" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">Vanilla DQN</text>
+<text x="1225" y="385" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">unmasked</text>
+
+<!-- Merge -->
+<line x1="1290" y1="130" x2="1320" y2="130" stroke="#444444" stroke-width="1.5"/>
+<line x1="1320" y1="130" x2="1320" y2="370" stroke="#444444" stroke-width="1.5"/>
+<line x1="1290" y1="370" x2="1320" y2="370" stroke="#444444" stroke-width="1.5"/>
+<line x1="1320" y1="250" x2="1348" y2="250" stroke="#444444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<!-- Final: exhaustive evaluation -->
+<rect x="1350" y="150" width="150" height="200" rx="10" fill="#FFFFFF" stroke="#444444" stroke-width="1.5"/>
+<text x="1425" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" font-weight="600" fill="#333333">4. Evaluate</text>
+<text x="1425" y="198" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" fill="#555555">120 profiles &#215; 3 seeds</text>
+
+<rect x="1360" y="222" width="130" height="50" rx="8" fill="#FDF3E7" stroke="#F0A868" stroke-width="1.5"/>
+<text x="1425" y="240" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="#333333">KG-DQN</text>
+<text x="1425" y="258" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">0% viol. &#183; 98.3% acc.</text>
+
+<rect x="1360" y="282" width="130" height="50" rx="8" fill="#EAF1FA" stroke="#7FA6D6" stroke-width="1.5"/>
+<text x="1425" y="300" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="#333333">Vanilla DQN</text>
+<text x="1425" y="318" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">81.7% viol. &#183; 91.7% acc.</text>
+</svg>
