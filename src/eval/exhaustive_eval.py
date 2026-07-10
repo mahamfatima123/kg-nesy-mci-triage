@@ -126,12 +126,12 @@ def run_single_patient(env, model, use_masking, amb, br, pulse, cmd, dec, hazard
     }
 
 
-def evaluate_exhaustive(model, use_masking, owl_path="ontology/triage_v2.rdf"):
+def evaluate_exhaustive(model, use_masking, owl_path="ontology/OWL_Ontology.rdf"):
     env = MCIEnv(owl_path=owl_path, use_kg_constraint=use_masking)
     return [run_single_patient(env, model, use_masking, *p) for p in enumerate_all_profiles()]
 
 
-def exhaustive_accuracy(model, use_masking, owl_path="ontology/triage_v2.rdf"):
+def exhaustive_accuracy(model, use_masking, owl_path="ontology/OWL_Ontology.rdf"):
     """
     Lightweight summary used as a training-time validation score:
     fraction of all 120 profiles correctly tagged (and, separately,

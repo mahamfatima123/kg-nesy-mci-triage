@@ -13,7 +13,7 @@ from src.eval.syn_starts_conversion import (
 )
 
 OWL_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "ontology", "triage_v2.rdf"
+    os.path.dirname(__file__), "..", "ontology", "OWL_Ontology.rdf"
 )
 
 SYN_STARTS_JSON_PATH = os.path.join(

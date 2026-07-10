@@ -28,7 +28,7 @@ python tests/tests_synSTARTS_validate.py
 ```
 
 This will:
-1. Load `ontology/triage_v2.rdf` and run the Pellet reasoner (same as every other test in this repo).
+1. Load `ontology/OWL_Ontology.rdf` and run the Pellet reasoner (same as every other test in this repo).
 2. Load all 2,000 scenarios from `data/syn_starts_all_scenarios.json`.
 3. Convert each scenario's vitals using the locked rule in `data/SYN_STARTS_CONVERSION_RULE.md`, excluding any scenario where a required field is missing or ambiguous.
 4. Classify every convertible scenario through the real reasoner-backed pipeline and compare against the gold tag.

@@ -7,7 +7,7 @@ from src.kg.constraint_guard import (
     ACTION_TAG_MINOR, ACTION_TAG_EXPECTANT, ACTION_OPEN_AIRWAY, ACTION_TREAT
 )
 
-OWL_PATH = "ontology/triage_v2.rdf"
+OWL_PATH = "ontology/OWL_Ontology.rdf"
 
 def make(onto, pid, ambulatory, breathing, pulse, follows_commands,
          decontaminated=True):
