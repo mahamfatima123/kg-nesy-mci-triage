@@ -27,28 +27,10 @@ CORRECT_TAG = {
 
 
 class MCIEnv(gym.Env):
-    """
-    Observation (11 values -- see patient_generator.state_to_obs):
-        ambulatory, breathing, pulse, follows_commands, decontaminated,
-        is_treated, hazard_chemical, hazard_biological, hazard_radiological,
-        hazard_nuclear, decon_progress
-
-    Actions (7 -- see ALL_ACTIONS):
-        tag_immediate, tag_delayed, tag_minor, tag_expectant,
-        open_airway, treat, decontaminate
-
-    Only tag_* actions end a patient's turn. decontaminate/open_airway/
-    treat keep the same patient active (up to max_actions_per_patient
-    non-tag actions), so a contaminated patient now requires a real
-    sequence -- decontaminate (possibly more than once, depending on
-    hazard type) before treat is KG-valid (CBRN Rule 5) -- rather than
-    decontamination being a fixed, unchangeable attribute.
-    """
 
     metadata = {"render_modes": ["human"]}
     EPISODE_LENGTH = 10
 
-    def __init__(self, owl_path="ontology/OWL_Ontology.rdf",
     def __init__(self, owl_path="ontology/OWL_Ontology.rdf",
                  use_kg_constraint=False, kg_penalty=-50.0,
                  max_actions_per_patient=5, step_cost=0.5):
