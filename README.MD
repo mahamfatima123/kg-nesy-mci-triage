@@ -46,7 +46,7 @@ We then test both **exhaustively** - not just on random episodes, but on *every 
 ```
 .
 ├── ontology/
-│   └── triage_v2.rdf              # The knowledge graph itself (OWL/RDF + SWRL rules)
+│   └── OWL_Ontology.rdf              # The knowledge graph itself (OWL/RDF + SWRL rules)
 ├── src/
 │   ├── env/
 │   │   ├── dqn.py                 # Neural network architecture + replay buffer
@@ -82,7 +82,7 @@ pip install gymnasium numpy torch owlready2 matplotlib
 
 > **Note on the reasoner:** `constraint_guard.py` uses Pellet via `owlready2`. Pellet requires a Java runtime (JRE/JDK) to be installed and on your `PATH`, since Pellet itself is a Java program that `owlready2` calls out to.
 
-All scripts assume they are run from the **repository root** (e.g., `python tests/tests_robustness.py`, not from inside the `tests/` folder), since several files resolve paths like `ontology/triage_v2.rdf` relative to the working directory.
+All scripts assume they are run from the **repository root** (e.g., `python tests/tests_robustness.py`, not from inside the `tests/` folder), since several files resolve paths like `ontology/OWL_Ontology.rdf` relative to the working directory.
 
 ---
 
@@ -102,7 +102,7 @@ Steps 1–3 are fast (seconds to low minutes). Step 5 is the long one - budget r
 
 ## File-by-file guide: what each file does and what its output means
 
-### `ontology/triage_v2.rdf`
+### `ontology/OWL_Ontology.rdf`
 
 This is **not Python code** - it's the knowledge graph itself, written in OWL/RDF (a formal logic format), editable visually in a tool called Protégé. It defines:
 - The four START categories (**Minor**, **Delayed**, **Immediate**, **Expectant**) as logical definitions over patient vitals (ambulation, breathing, respiratory rate / tachypnea, pulse, mental status, decontamination status) - not hardcoded rules, but formal class definitions a reasoner can derive conclusions from. This includes **START Rule 3** (respiratory rate > 30 → tachypneic → Immediate), encoded via a dedicated `hasRespiratoryRate` datatype property and `TachypneaStatus` class hierarchy, cross-checked by SWRL rules `START_rule3b_tachypnea` and `START_rule3c_tachypnea_immediate`, with a `NOT tachypneic` guard on `START_rule6_delayed` to prevent conflicting `treatmentRequired` assertions.
@@ -116,7 +116,7 @@ You won't run this file directly - every other file in `src/kg/` and `src/env/` 
 ### `src/kg/constraint_guard.py`
 
 This is the bridge between the ontology file and your Python code. On load, it:
-1. Reads `triage_v2.rdf`.
+1. Reads `OWL_Ontology.rdf`.
 2. Runs the **Pellet reasoner** once, over all 64 enumerable binary patient profiles (6 binary dimensions: ambulatory, breathing, pulse, follows-commands, decontaminated, tachypneic), of which **48 are clinically coherent** - the remaining 16 ("tachypneic while not breathing") are excluded as clinically meaningless. For each of the 48, it computes both the formal-logic classification *and* the SWRL-rule-based classification, and checks they agree (if they don't, it raises an error immediately rather than silently using bad data).
 3. Caches the result into a fast lookup table, so every later check during training/evaluation is just a dictionary lookup rather than re-running the reasoner each time.
 

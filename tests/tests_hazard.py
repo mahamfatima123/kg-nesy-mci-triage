@@ -7,7 +7,7 @@ from src.kg.constraint_guard import (
     ACTION_DECONTAMINATE, ACTION_TREAT
 )
 
-OWL_PATH = "ontology/triage_v2.rdf"
+OWL_PATH = "ontology/OWL_Ontology.rdf"
 
 
 def test_hazard_wiring():

@@ -31,7 +31,7 @@ class MCIEnv(gym.Env):
     metadata = {"render_modes": ["human"]}
     EPISODE_LENGTH = 10
 
-    def __init__(self, owl_path="ontology/triage_v2.rdf",
+    def __init__(self, owl_path="ontology/OWL_Ontology.rdf",
                  use_kg_constraint=False, kg_penalty=-50.0,
                  max_actions_per_patient=5, step_cost=0.5):
         super().__init__()
