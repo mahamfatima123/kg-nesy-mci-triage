@@ -46,7 +46,8 @@ We then test both **exhaustively** - not just on random episodes, but on *every 
 ```
 .
 ├── ontology/
-│   └── OWL_Ontology.rdf              # The knowledge graph itself (OWL/RDF + SWRL rules)
+│   ├── OWL_Ontology.rdf              # The knowledge graph itself (OWL/RDF + SWRL rules)
+│   ├── omtology_overview.svg         # Visual map of all classes, properties, and SWRL rules
 ├── src/
 │   ├── env/
 │   │   ├── dqn.py                 # Neural network architecture + replay buffer
@@ -110,6 +111,10 @@ This is **not Python code** - it's the knowledge graph itself, written in OWL/RD
 - SWRL rules that *independently* compute a recommended treatment action and severity score, used to cross-check the formal class definitions agree with each other.
 
 You won't run this file directly - every other file in `src/kg/` and `src/env/` reads it.
+
+![Ontology overview: 30 OWL classes, 11 object properties, 27 data properties, 42 named individuals, 9 SWRL rules, cross-validated by a Pellet reasoner](ontology/ontology_overview.svg)
+
+The diagram above maps the full ontology: the four disjoint-pair assessment dimensions feeding into the Pellet reasoner's dual inference path (DL classification vs. SWRL rule inference), the resulting START category rules, the CBRN decontamination extension, the seven-action treatment inventory with its contraindication edges, and the complete 9-rule SWRL catalog.
 
 ---
 
