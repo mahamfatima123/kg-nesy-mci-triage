@@ -65,6 +65,7 @@ We then test both **exhaustively** - not just on random episodes, but on *every 
 │   ├── tests_hazard.py            # Unit tests for CBRN hazard/decontamination logic
 │   ├── tests_env.py               # Tests the Gymnasium environment wiring
 │   ├── tests_dqn.py               # Quick single-seed training + comparison (dev smoke test)
+│   ├── tests_shadow_feedback.py   # Optional A/B check: does penalizing the masked-out "shadow" preference reduce it?
 │   └── tests_robustness.py        # THE paper's main experiment: multi-seed, exhaustive evaluation
 ├── results/                       # All generated outputs land here (created automatically)
 │   ├── *.csv                      # Per-profile evaluation results
@@ -96,6 +97,7 @@ If you're setting this up fresh, run things in this order - each step builds on 
 3. **`python tests/tests_env.py`** - confirms the RL environment itself behaves correctly (action masking, rewards, multi-step decontamination).
 4. **`python tests/tests_dqn.py`** *(optional, quick)* - a fast single-seed sanity check that training runs end-to-end and the masking guarantee holds. Not the paper numbers.
 5. **`python tests/tests_robustness.py`** - **this is the real experiment.** Trains both agents three times (three random seeds), evaluates them exhaustively against all 120 profiles, and produces every number and figure reported in the paper. This takes a while - it trains six full models (Vanilla + KG-DQN, × 3 seeds).
+6. **`python tests/tests_shadow_feedback.py`** *(optional)* - a follow-up A/B check reported in the paper's Discussion section, not the main experiment. Trains KG-DQN twice per seed - once normally, once with the optional `shadow_feedback` intervention - and compares how often the network's raw, masked-out preference still favored a contraindicated action.
 
 Steps 1–3 are fast (seconds to low minutes). Step 5 is the long one - budget real time for it.
 
@@ -155,7 +157,7 @@ Defines the **120 enumerable patient profiles** - the 16 combinations of the fou
 
 ### `train/train_dqn.py`
 
-The training loop. Standard epsilon-greedy DQN with a target network. Every 20 episodes, the current network is evaluated against the full 120-profile exhaustive set and the best-scoring checkpoint is tracked in memory. At the end of training, the best model is returned directly - no checkpoint files are written unless `save_path` is explicitly provided.
+The training loop. Standard epsilon-greedy DQN with a target network. Every 20 episodes, the current network is evaluated against the full 120-profile exhaustive set and the best-scoring checkpoint is tracked in memory. At the end of training, the best model is returned directly - no checkpoint files are written unless `save_path` is explicitly provided. It also accepts an optional `shadow_feedback` flag (default `False`) that, when enabled, pushes an extra synthetic penalty transition into the replay buffer whenever the network's raw, masked-out action preference favors a contraindicated action - see `tests/tests_shadow_feedback.py`.
 
 ---
 
@@ -206,6 +208,16 @@ A **quick, single-seed** dev sanity check. Trains both agents once (500 episodes
 
 
 The key thing to confirm: **KG-DQN's violation rate is always exactly 0.0** - this is the masking guarantee, and it must hold regardless of training quality.
+
+---
+
+### `tests/tests_shadow_feedback.py`
+
+**Run:** `python tests/tests_shadow_feedback.py`
+
+An optional **A/B check**, not part of the core paper experiment. The mask guarantees KG-DQN never *executes* a contraindicated action, but the network's raw, unmasked preference can still quietly favor one at some steps (a "shadow violation"). This script tests whether an explicit penalty on that raw preference - the `shadow_feedback` parameter in `train_dqn.py` - reduces how often it happens, by training KG-DQN twice per seed (once without the intervention, once with) and comparing exhaustive accuracy, violation rate, and shadow-violation rate between the two.
+
+This is the experiment behind the paper's Discussion paragraph "A preliminary follow-up: penalizing the shadow preference." It's exploratory, not part of Table 1/2's core results.
 
 ---
 
