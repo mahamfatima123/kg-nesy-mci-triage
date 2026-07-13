@@ -36,15 +36,15 @@ This will:
 
 ## Results summary
 
-Of the 2,000 raw scenarios, **348 had all required fields mechanically derivable** under the locked conversion rule (the rest were excluded, not guessed). Across those 348 scoreable cases:
+Of the 2,000 raw scenarios, **630 had all required fields mechanically derivable** under the locked conversion rule (the rest were excluded, not guessed). Across those 630 scoreable cases:
 
 | Gold category | Agreement |
 |---|---|
-| Green (Minor) | 14/14 |
-| Yellow (Delayed) | 227/227 |
-| Red (Immediate) | 105/105 |
+| Green (Minor) | 20/20 |
+| Yellow (Delayed) | 498/498 |
+| Red (Immediate) | 110/110 |
 | Black (Expectant) | 2/2 |
-| **Overall** | **348/348 (100.0%)** |
+| **Overall** | **630/630 (100.0%)** |
 
 ![Why Syn-STARTS scenarios are excluded, by category](results/syn_starts_exclusion_reasons.png)
 
