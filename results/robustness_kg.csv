@@ -62,7 +62,7 @@ True,False,False,False,False,nuclear,False,0.000600,tag_minor,tag_minor,tag_mino
 False,True,True,True,True,,False,0.136080,tag_delayed,tag_delayed,tag_delayed,True,True,False,1
 False,True,True,True,False,chemical,False,0.022680,tag_delayed,tag_delayed,tag_delayed,True,True,False,2
 False,True,True,True,False,biological,False,0.022680,tag_delayed,tag_delayed,tag_delayed,True,True,False,3
-False,True,True,True,False,radiological,False,0.022680,tag_delayed,tag_delayed,tag_immediate,False,False,False,3
+False,True,True,True,False,radiological,False,0.022680,tag_delayed,tag_delayed,tag_delayed,True,True,False,3
 False,True,True,True,False,nuclear,False,0.022680,tag_delayed,tag_delayed,tag_delayed,True,True,False,4
 False,True,True,True,True,,True,0.015120,tag_immediate,tag_immediate,tag_immediate,True,True,False,1
 False,True,True,True,False,chemical,True,0.002520,tag_immediate,tag_immediate,tag_immediate,True,True,False,2

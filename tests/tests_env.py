@@ -131,17 +131,17 @@ def test_decon_flow_completes_and_unlocks_treat():
     for i in range(duration):
         obs, reward, done, _, _ = env_kg.step(ACTION_INDEX["decontaminate"])
         print(f"    decontaminate {i+1}/{duration} -> "
-              f"decontaminated={bool(obs[4])}, progress={obs[10]:.2f}, reward={reward}")
+              f"decontaminated={bool(obs[4])}, progress={obs[11]:.2f}, reward={reward}")
 
     assert obs[4] == 1.0, "Patient should be fully decontaminated now"
-    assert obs[10] == 1.0, "decon_progress should read 1.0 once complete"
+    assert obs[11] == 1.0, "decon_progress should read 1.0 once complete"
     print("  PASS: decontamination progress climbed correctly and finished exactly "
           "on the expected step.")
 
     print(f"\n  Now trying 'treat' on this SAME patient, who is freshly clean:")
     _, reward, _, _, _ = env_kg.step(ACTION_INDEX["treat"])
     print(f"  Reward received: {reward}")
-    print(f"  (Note: if decontamination used most of this patient's 4-action "
+    print(f"  (Note: if decontamination used most of this patient's 5-action "
           f"budget, this reward may also include a timeout penalty on top of "
           f"the normal +1.0 treat bonus -- what matters for this test is only "
           f"that it is NOT the KG penalty, i.e. treat was not blocked.)")
