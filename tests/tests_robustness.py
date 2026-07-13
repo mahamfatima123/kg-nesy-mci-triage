@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
     van_accs, van_viols = [], []
     kg_accs,  kg_viols  = [], []
+    kg_shadow_rates = []
 
     primary_vanilla_results = None
     primary_kg_results      = None
@@ -65,6 +66,8 @@ if __name__ == "__main__":
         van_violations = sum(r["any_violation"] for r in vanilla_results)
         kg_correct     = sum(r["correct"]       for r in kg_results)
         kg_violations  = sum(r["any_violation"] for r in kg_results)
+        kg_shadow_count = sum(r["any_shadow_violation"] for r in kg_results)
+        kg_shadow_rates.append(kg_shadow_count / n)
 
         print(f"  Vanilla DQN: {van_correct}/{n} correct "
               f"({100*van_correct/n:.1f}%), "
@@ -103,6 +106,9 @@ if __name__ == "__main__":
     print(f"{'KG-DQN':<16} "
           f"{np.mean(kg_accs)*100:>10.1f}% ± {np.std(kg_accs)*100:<6.1f}%"
           f"{np.mean(kg_viols)*100:>18.1f}% ± {np.std(kg_viols)*100:<6.1f}%")
+    print(f"\nKG-DQN shadow-violation rate (raw policy preferred a "
+      f"contraindicated action at some point): "
+      f"{np.mean(kg_shadow_rates)*100:.1f}% ± {np.std(kg_shadow_rates)*100:.1f}%")
     print("\nPASS: KG-DQN violation rate is exactly 0.0 on every seed.")
 
     # ── Per-profile CSVs (primary seed) ──────────────────────────────

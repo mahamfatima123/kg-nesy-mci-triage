@@ -102,18 +102,22 @@ class MCIEnv(gym.Env):
         return np.array(state_to_obs(self.current_state), dtype=np.float32)
 
     def _load_next_patient(self):
-            self.current_state, self.correct_tag = generate_patient()
-            patient_id = f"patient_{self.patients_seen}"
-            self.current_patient = create_patient(
-                self.onto, patient_id,
-                ambulatory       = self.current_state["ambulatory"],
-                breathing        = self.current_state["breathing"],
-                pulse            = self.current_state["pulse"],
-                follows_commands = self.current_state["follows_commands"],
-                decontaminated   = self.current_state["decontaminated"],
-                hazard_type      = self.current_state["hazard_type"],
-                respiratory_rate = self.current_state["respiratory_rate"],
-            )
+        self.patient_action_count = 0
+        self.current_state, self.correct_tag = generate_patient()
+        patient_id = f"patient_{self.patients_seen}"
+        self.current_patient = create_patient(
+            self.onto, patient_id,
+            ambulatory       = self.current_state["ambulatory"],
+            breathing        = self.current_state["breathing"],
+            pulse            = self.current_state["pulse"],
+            follows_commands = self.current_state["follows_commands"],
+            decontaminated   = self.current_state["decontaminated"],
+            hazard_type      = self.current_state["hazard_type"],
+            respiratory_rate = self.current_state["respiratory_rate"],
+        )
+        self.current_state["decon_duration"] = get_decontamination_duration(
+            self.onto, self.current_patient
+        )
 
     def _next_patient_or_done(self, last_reward):
         self.patients_seen += 1
