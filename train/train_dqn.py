@@ -20,7 +20,7 @@ def select_action(state, model, epsilon, action_dim, mask=None):
             action = int(np.random.choice(valid_actions))
         else:
             action = random.randint(0, action_dim - 1)
-        return action, False
+        return action, False, None          # CHANGED: added third return value
 
     state_t = torch.FloatTensor(state).unsqueeze(0).to(device)
     q_values = model(state_t).detach().cpu().numpy()[0]
@@ -36,11 +36,11 @@ def select_action(state, model, epsilon, action_dim, mask=None):
         action = unmasked_argmax
         shadow_violation = False
 
-    return action, shadow_violation
+    shadow_action = unmasked_argmax if shadow_violation else None   
+    return action, shadow_violation, shadow_action                 
 
 
-# AFTER
-def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
+def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20, shadow_feedback=False):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -89,9 +89,11 @@ def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20):
 
         while not done:
             mask = env.get_valid_action_mask() if use_kg else None
-            action, shadow_violation = select_action(state, model, epsilon, action_dim, mask)
+            action, shadow_violation, shadow_action = select_action(state, model, epsilon, action_dim, mask)
             if shadow_violation:
                 ep_shadow += 1
+                if shadow_feedback:
+                    buffer.push(state, shadow_action, env.kg_penalty, state, True)
 
             action_name = INDEX_ACTION[action]
             if action_name.startswith("tag_"):
