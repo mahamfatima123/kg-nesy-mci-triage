@@ -61,6 +61,11 @@ if __name__ == "__main__":
 
         vanilla_results, kg_results, kg_model = run_one_seed(seed)
 
+        # ── Per-profile CSVs for THIS seed (added: saves every seed, not just primary) ──
+        save_csv(vanilla_results, f"results/robustness_vanilla_seed{seed}.csv")
+        save_csv(kg_results,      f"results/robustness_kg_seed{seed}.csv")
+        print(f"  Saved per-profile CSVs for seed {seed}.")
+
         n              = len(vanilla_results)
         van_correct    = sum(r["correct"]       for r in vanilla_results)
         van_violations = sum(r["any_violation"] for r in vanilla_results)
@@ -111,10 +116,10 @@ if __name__ == "__main__":
       f"{np.mean(kg_shadow_rates)*100:.1f}% ± {np.std(kg_shadow_rates)*100:.1f}%")
     print("\nPASS: KG-DQN violation rate is exactly 0.0 on every seed.")
 
-    # ── Per-profile CSVs (primary seed) ──────────────────────────────
+    # ── Per-profile CSVs (primary seed, kept for backward compatibility) ─
     save_csv(primary_vanilla_results, "results/robustness_vanilla.csv")
     save_csv(primary_kg_results,      "results/robustness_kg.csv")
-    print(f"\nSaved per-profile CSVs for seed {PRIMARY_SEED}.")
+    print(f"\nSaved per-profile CSVs for seed {PRIMARY_SEED} (primary).")
 
     # ── Figure 1: correctness and violations vs. profile rarity ──────
     def sort_by_rarity(results):
@@ -153,37 +158,38 @@ if __name__ == "__main__":
         ax.grid(axis="y", color=GRID_COLOR, linewidth=0.8, zorder=0)
         ax.set_axisbelow(True)
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5.3), dpi=200)
-
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5.0), dpi=200)
     ax = axes[0]
     ax.plot(rolling(van_correct_flags), color=COLOR_VANILLA, lw=2.2, label="Vanilla DQN")
     ax.plot(rolling(kg_correct_flags),  color=COLOR_KG,      lw=2.2, label="KG-DQN")
-    ax.set_title("Correctness vs. profile rarity", fontsize=13,
-                 fontweight="bold", color="#222222", pad=28, loc="left")
-    ax.text(0, 1.06, "left = rarest, right = most common",
-            transform=ax.transAxes, fontsize=9.5, color="#666666", ha="left")
+    ax.set_title("Correctness vs. profile rarity", fontsize=17,
+                 fontweight="bold", color="#222222", pad=30, loc="left")
+    ax.text(0, 1.07, "left = rarest, right = most common",
+            transform=ax.transAxes, fontsize=13, color="#666666", ha="left")
     ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)",
-                  fontsize=10, color=TEXT_COLOR, labelpad=8)
-    ax.set_ylabel("Fraction correct", fontsize=10.5, color=TEXT_COLOR)
+                  fontsize=14, color=TEXT_COLOR, labelpad=10)
+    ax.set_ylabel("Fraction correct", fontsize=14, color=TEXT_COLOR)
     ax.set_ylim(0, 1.15)
     style_axis(ax)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2,
-              frameon=False, fontsize=9.5, handlelength=1.4)
+    ax.tick_params(axis="both", labelsize=12)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=2,
+              frameon=False, fontsize=13, handlelength=1.6)
 
     ax = axes[1]
     ax.plot(rolling(van_violation_flags), color=COLOR_VIOL, lw=2.2, label="Vanilla DQN")
     ax.axhline(0, color=COLOR_KG, lw=2.2, linestyle="-", label="KG-DQN (always 0)")
-    ax.set_title("Safety violations vs. profile rarity", fontsize=13,
-                 fontweight="bold", color="#222222", pad=28, loc="left")
-    ax.text(0, 1.06, "left = rarest, right = most common",
-            transform=ax.transAxes, fontsize=9.5, color="#666666", ha="left")
+    ax.set_title("Safety violations vs. profile rarity", fontsize=17,
+                 fontweight="bold", color="#222222", pad=30, loc="left")
+    ax.text(0, 1.07, "left = rarest, right = most common",
+            transform=ax.transAxes, fontsize=13, color="#666666", ha="left")
     ax.set_xlabel("Profiles sorted by prior probability (rolling avg, w=8)",
-                  fontsize=10, color=TEXT_COLOR, labelpad=8)
-    ax.set_ylabel("Fraction with a violation", fontsize=10.5, color=TEXT_COLOR)
+                  fontsize=14, color=TEXT_COLOR, labelpad=10)
+    ax.set_ylabel("Fraction with a violation", fontsize=14, color=TEXT_COLOR)
     ax.set_ylim(-0.05, 1.15)
     style_axis(ax)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2,
-              frameon=False, fontsize=9.5, handlelength=1.4)
+    ax.tick_params(axis="both", labelsize=12)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=2,
+              frameon=False, fontsize=13, handlelength=1.6)
 
     fig.tight_layout(rect=[0, 0.06, 1, 0.94])
     fig.subplots_adjust(wspace=0.28)
