@@ -99,7 +99,7 @@ if __name__ == "__main__":
             primary_kg_results      = kg_results
             primary_kg_model        = kg_model
 
-    # ── Multi-seed summary (Table 1 in paper) ────────────────────────
+    # ── Multi-seed summary (Table 3 in paper) ────────────────────────
     print("\n" + "="*80)
     print(f"            MULTI-SEED SUMMARY  ({len(SEEDS)} seeds: {SEEDS})")
     print("="*80)
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     save_csv(primary_kg_results,      "results/robustness_kg.csv")
     print(f"\nSaved per-profile CSVs for seed {PRIMARY_SEED} (primary).")
 
-    # ── Figure 1: correctness and violations vs. profile rarity ──────
+    # ── Figure 2: correctness and violations vs. profile rarity ──────
     def sort_by_rarity(results):
         return sorted(results, key=lambda r: r["prior_probability"])
 
@@ -194,9 +194,9 @@ if __name__ == "__main__":
     fig.tight_layout(rect=[0, 0.06, 1, 0.94])
     fig.subplots_adjust(wspace=0.28)
     fig.savefig("results/robustness_stress_test.png", dpi=200, bbox_inches="tight")
-    print(f"Saved results/robustness_stress_test.png (Figure 1 in paper).")
+    print(f"Saved results/robustness_stress_test.png (Figure 2 in paper).")
 
-    # ── KG-DQN failure traces (Table 6 in paper) ─────────────────────
+    # ── KG-DQN failure traces (Section 4.2 in paper) ─────────────────
     kg_failures = [r for r in primary_kg_results
                    if not r["correct"] or r["any_violation"]]
 

@@ -20,7 +20,7 @@ def select_action(state, model, epsilon, action_dim, mask=None):
             action = int(np.random.choice(valid_actions))
         else:
             action = random.randint(0, action_dim - 1)
-        return action, False, None          # CHANGED: added third return value
+        return action, False, None
 
     state_t = torch.FloatTensor(state).unsqueeze(0).to(device)
     q_values = model(state_t).detach().cpu().numpy()[0]
@@ -85,7 +85,7 @@ def train(use_kg=False, penalize_kg=None, episodes=500, seed=42, save_path=None,
 
         ep_reward     = 0
         ep_violations = 0
-        ep_shadow     = 0   # NEW
+        ep_shadow     = 0
         ep_correct    = 0
         ep_tags       = 0
         ep_kg_agree   = 0
@@ -148,7 +148,7 @@ def train(use_kg=False, penalize_kg=None, episodes=500, seed=42, save_path=None,
 
         rewards_log.append(ep_reward)
         violation_log.append(ep_violations)
-        shadow_violation_log.append(ep_shadow)   # NEW
+        shadow_violation_log.append(ep_shadow)
         correct_tag_log.append(correct_rate)
         kg_agreement_log.append(kg_agree_rate)
 
@@ -162,7 +162,7 @@ def train(use_kg=False, penalize_kg=None, episodes=500, seed=42, save_path=None,
 
             exhaustive_acc_log.append(exhaustive_acc)
             exhaustive_viol_log.append(exhaustive_viol)
-            exhaustive_shadow_log.append(exhaustive_shadow)   # NEW
+            exhaustive_shadow_log.append(exhaustive_shadow)
 
             if exhaustive_acc > best_score:
                 best_score      = exhaustive_acc

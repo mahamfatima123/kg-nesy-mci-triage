@@ -42,7 +42,7 @@ We compare three agents trained on identical patient scenarios:
 
 We then test all agents **exhaustively** - not just on random episodes, but on *every one of the 120 possible patient profiles* the environment can generate (the 16 binary combinations of the four core vital signs, each split by tachypnea status when breathing, crossed with clean or one of four CBRN hazard types) - across three different random training seeds, to see whether the safety guarantee actually holds everywhere, and whether it costs anything in accuracy.
 
-The core paper result (Table 1) compares **Vanilla DQN vs. KG-DQN**; the **Penalized DQN** condition is an additional ablation, run separately (see `run_penalized_baseline.py` below) to isolate how much of the improvement comes from *masking* specifically, as opposed to just penalizing unsafe actions harder.
+The core paper result (Table 3) compares **Vanilla DQN vs. KG-DQN**; the **Penalized DQN** condition is an additional ablation, run separately (see `run_penalized_baseline.py` below) to isolate how much of the improvement comes from *masking* specifically, as opposed to just penalizing unsafe actions harder.
 
 ---
 
@@ -107,7 +107,7 @@ If you're setting this up fresh, run things in this order - each step builds on 
 3. **`python tests/tests_hazard.py`** - confirms the CBRN decontamination logic is wired correctly.
 4. **`python tests/tests_env.py`** - confirms the RL environment itself behaves correctly (action masking, rewards, multi-step decontamination).
 5. **`python tests/tests_dqn.py`** *(optional, quick)* - a fast single-seed sanity check that training runs end-to-end and the masking guarantee holds. Not the paper numbers.
-6. **`python tests/tests_robustness.py`** - **this is the real experiment.** Trains Vanilla DQN and KG-DQN three times each (three random seeds), evaluates them exhaustively against all 120 profiles, and produces every number and figure reported in the paper's Table 1 / Figure 1. This takes a while - it trains six full models.
+6. **`python tests/tests_robustness.py`** - **this is the real experiment.** Trains Vanilla DQN and KG-DQN three times each (three random seeds), evaluates them exhaustively against all 120 profiles, and produces every number and figure reported in the paper's Table 3 / Figure 2. This takes a while - it trains six full models.
 7. **`python tests/tests_shadow_feedback.py`** *(optional)* - a follow-up A/B check reported in the paper's Discussion section, not the main experiment. Trains KG-DQN twice per seed - once normally, once with the optional `shadow_feedback` intervention - and compares how often the network's raw, masked-out preference still favored a contraindicated action.
 8. **`python tests/tests_rule_baseline.py`** *(optional, fast)* - a zero-learning reference point: no neural network at all, just the ontology's recommended action taken directly. Useful context for how much of the task the symbolic layer solves before any RL is added.
 9. **`python run_penalized_baseline.py`** *(optional)* - trains all three conditions (Vanilla / Penalized / KG-DQN) across the same three seeds and reports the full three-way comparison, including actions-per-patient.
@@ -246,7 +246,7 @@ A zero-learning reference point - no neural network at all. At each step it simp
 
 An optional **A/B check**, not part of the core paper experiment. The mask guarantees KG-DQN never *executes* a contraindicated action, but the network's raw, unmasked preference can still quietly favor one at some steps (a "shadow violation"). This script tests whether an explicit penalty on that raw preference - the `shadow_feedback` parameter in `train_dqn.py` - reduces how often it happens, by training KG-DQN twice per seed (once without the intervention, once with) and comparing exhaustive accuracy, violation rate, and shadow-violation rate between the two.
 
-This is the experiment behind the paper's Discussion paragraph "A preliminary follow-up: penalizing the shadow preference." It's exploratory, not part of Table 1/2's core results.
+This is the experiment behind the paper's Discussion paragraph "A preliminary follow-up: penalizing the shadow preference." It's exploratory, not part of Table 2/3's core results.
 
 ---
 
@@ -259,18 +259,12 @@ This is the experiment behind the paper's Discussion paragraph "A preliminary fo
 2. Evaluates both exhaustively against all 120 patient profiles.
 3. Confirms (via an `assert`) that KG-DQN's violation rate is exactly zero.
 
-After all three seeds, reports the multi-seed summary (paper's Table 1), the KG-DQN shadow-violation rate, saves per-profile CSVs for every seed, generates Figure 1, and prints full action traces for any KG-DQN failures on the primary seed (paper's Table 6).
+After all three seeds, reports the multi-seed summary (paper's Table 3), the KG-DQN shadow-violation rate, saves per-profile CSVs for every seed, generates Figure 2, and prints full action traces for any KG-DQN failures on the primary seed (see Section 4.2).
 
-<table>
-  <tr>
-    <td><img src="terminal_outputs/tests_robustness_all_seeds.png" width="480"/></td>
-    <td><img src="terminal_outputs/tests_robustness_seed_summary_failure_cases.png" width="480"/></td>
-  </tr>
-</table>
 
 ![Rarity vs. correctness/violation](results/robustness_stress_test.png)
 
-Figure 1: correctness (left) and violation rate (right) as a function of profile rarity - KG-DQN is flat at perfect correctness and zero violations everywhere, while Vanilla's correctness dips on the rarest profiles and its violation rate stays high across nearly the entire spectrum.
+Figure 2: correctness (left) and violation rate (right) as a function of profile rarity - KG-DQN is flat at perfect correctness and zero violations everywhere, while Vanilla's correctness dips on the rarest profiles and its violation rate stays high across nearly the entire spectrum.
 
 ---
 
@@ -306,7 +300,7 @@ After running `tests_robustness.py`, your `results/` folder will contain:
 |---|---|
 | `robustness_vanilla_seed{42,43,44}.csv` / `robustness_kg_seed{42,43,44}.csv` | Per-profile results (all 120 rows) for each of the three seeds - correct tag, ontology-recommended tag, predicted tag, correctness flag, whether it matched the ontology's recommendation, violation flag, action count, etc. |
 | `robustness_vanilla.csv` / `robustness_kg.csv` | Same as the seed-42 files above - kept as their own copy for backward compatibility with earlier scripts/notebooks that expect these exact filenames. |
-| `robustness_stress_test.png` | The rarity-vs-correctness/violation figure (Figure 1 in the paper) |
+| `robustness_stress_test.png` | The rarity-vs-correctness/violation figure (Figure 2 in the paper) |
 
 `run_penalized_baseline.py` and `run_undertrained_stress_test.py` print their results directly to the terminal and do not currently write additional files to `results/`.
 
