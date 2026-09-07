@@ -246,7 +246,7 @@ A zero-learning reference point - no neural network at all. At each step it simp
 
 An optional **A/B check**, not part of the core paper experiment. The mask guarantees KG-DQN never *executes* a contraindicated action, but the network's raw, unmasked preference can still quietly favor one at some steps (a "shadow violation"). This script tests whether an explicit penalty on that raw preference - the `shadow_feedback` parameter in `train_dqn.py` - reduces how often it happens, by training KG-DQN twice per seed (once without the intervention, once with) and comparing exhaustive accuracy, violation rate, and shadow-violation rate between the two.
 
-This is the experiment behind the paper's Discussion paragraph "A preliminary follow-up: penalizing the shadow preference." It's exploratory, not part of Table 2/3's core results.
+This is one of the two follow-up checks behind the paper's Discussion paragraph "Two follow-ups on the −50 penalty." It's exploratory, not part of Table 2/3's core results.
 
 ---
 
