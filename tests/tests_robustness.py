@@ -121,7 +121,7 @@ if __name__ == "__main__":
     save_csv(primary_kg_results,      "results/robustness_kg.csv")
     print(f"\nSaved per-profile CSVs for seed {PRIMARY_SEED} (primary).")
 
-    # ── Figure 3: correctness and violations vs. profile rarity ──────
+    # ── Figure 2: correctness and violations vs. profile rarity ──────
     def sort_by_rarity(results):
         return sorted(results, key=lambda r: r["prior_probability"])
 
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     fig.savefig("results/robustness_stress_test.png", dpi=200, bbox_inches="tight")
     print(f"Saved results/robustness_stress_test.png (Figure 2 in paper).")
 
-        # ── KG-DQN failure traces (Section 4.2 in paper) ─────────────────
+    # ── KG-DQN failure traces (Section 4.2 in paper) ─────────────────
     kg_failures = [r for r in primary_kg_results
                    if not r["correct"] or r["any_violation"]]
 
