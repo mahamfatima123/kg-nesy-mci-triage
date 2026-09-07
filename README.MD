@@ -316,4 +316,6 @@ These files are what's referenced in the paper's acknowledgments section as supp
 
 ## Acknowledgments
 
-Developed as part of doctoral research at HAW Hamburg, Faculty of Life Sciences, in collaboration with ongoing work on AI-supported maritime CBRN emergency response.
+Developed as part of doctoral research at HAW Hamburg, Faculty of Life Sciences.
+
+This work appears in the proceedings of **KG-NeSy 2026** (Third International Workshop on Knowledge Graphs and Neurosymbolic AI, co-located with ISWC 2026, Bari, Italy).
