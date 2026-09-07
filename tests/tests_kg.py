@@ -17,7 +17,7 @@ def make(onto, pid, ambulatory, breathing, pulse, follows_commands,
 
 def test_all():
     onto = load_ontology(OWL_PATH)
-    print("Ontology loaded. Running 8 patient scenario tests...\n")
+    print("Ontology loaded. Running 9 patient scenario tests...\n")
 
     # --- Scenario 1: Minor category -> ONLY tag_minor is valid ---
     p1 = make(onto, "p1", True,  True,  True,  True)
