@@ -40,12 +40,16 @@ def select_action(state, model, epsilon, action_dim, mask=None):
     return action, shadow_violation, shadow_action                 
 
 
-def train(use_kg=False, episodes=500, seed=42, save_path=None, eval_every=20, shadow_feedback=False):
+def train(use_kg=False, penalize_kg=None, episodes=500, seed=42, save_path=None,
+          eval_every=20, shadow_feedback=False):
+    if penalize_kg is None:
+        penalize_kg = use_kg
+
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    env = MCIEnv(use_kg_constraint=use_kg)
+    env = MCIEnv(use_kg_constraint=use_kg, penalize_kg_violation=penalize_kg)
 
     state_dim  = env.observation_space.shape[0]
     action_dim = env.action_space.n

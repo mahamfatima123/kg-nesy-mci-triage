@@ -32,7 +32,8 @@ class MCIEnv(gym.Env):
     EPISODE_LENGTH = 10
 
     def __init__(self, owl_path="ontology/OWL_Ontology.rdf",
-                 use_kg_constraint=False, kg_penalty=-50.0,
+                 use_kg_constraint=False, penalize_kg_violation=False,
+                 kg_penalty=-50.0,
                  max_actions_per_patient=5, step_cost=0.5):
         super().__init__()
 
@@ -40,8 +41,8 @@ class MCIEnv(gym.Env):
             low=0, high=1, shape=(OBS_DIM,), dtype=np.float32
         )
         self.action_space = spaces.Discrete(len(ALL_ACTIONS))
-
         self.use_kg_constraint       = use_kg_constraint
+        self.penalize_kg_violation   = penalize_kg_violation
         self.kg_penalty              = kg_penalty
         self.max_actions_per_patient = max_actions_per_patient
         self.step_cost               = step_cost
@@ -142,7 +143,7 @@ class MCIEnv(gym.Env):
         kg_valid, kg_reason = check_action(
             self.onto, self.current_patient, action_name)
 
-        if self.use_kg_constraint and not kg_valid:
+        if (self.use_kg_constraint or self.penalize_kg_violation) and not kg_valid:
             reward = self.kg_penalty
             self.last_kg_violation = True
         elif is_terminal:
@@ -170,10 +171,6 @@ class MCIEnv(gym.Env):
         return self._same_patient_obs(reward)
 
     def _apply_intermediate_action(self, action_name):
-        """Mutates patient state for non-tag actions and shapes reward.
-        A small step_cost discourages stalling; each action gives a
-        one-time completion bonus and a small penalty if repeated after
-        it's already done (no reward farming by spamming an action)."""
         reward = -self.step_cost
 
         if action_name == ACTION_DECONTAMINATE:
