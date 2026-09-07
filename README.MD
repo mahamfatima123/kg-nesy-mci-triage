@@ -1,6 +1,6 @@
 # KG-DQN - External Validation (`syn_STARTS_validation` branch)
 
-This branch extends [`main`](../../tree/main) with an **independent external validation** of the triage ontology against a structured, third-party triage scenario dataset (the **syn_STARTS** benchmark) - separate from, and additional to, the multi-seed RL robustness experiment reported in the paper's main results (Table 1).
+This branch extends [`main`](../../tree/main) with an **independent external validation** of the triage ontology against a structured, third-party triage scenario dataset (the **syn_STARTS** benchmark) - separate from, and additional to, the multi-seed RL robustness experiment reported in the paper's main results (Table 3).
 
 > **Everything not described below - the ontology, `constraint_guard.py`, the RL environment, the DQN agents, and the five core test scripts (`tests_kg.py`, `tests_hazard.py`, `tests_env.py`, `tests_dqn.py`, `tests_robustness.py`) - is identical to `main`.** See [`main`'s README](../../blob/main/README.MD) for setup, the repository structure, and how those files work. This README only documents what's unique to this branch.
 

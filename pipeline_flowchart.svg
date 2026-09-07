@@ -85,9 +85,9 @@
 
 <rect x="1360" y="222" width="130" height="50" rx="8" fill="#FDF3E7" stroke="#F0A868" stroke-width="1.5"/>
 <text x="1425" y="240" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="#333333">KG-DQN</text>
-<text x="1425" y="258" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">0% viol. &#183; 98.3% acc.</text>
+<text x="1425" y="258" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">0.0% viol. &#183; 100.0% acc.</text>
 
 <rect x="1360" y="282" width="130" height="50" rx="8" fill="#EAF1FA" stroke="#7FA6D6" stroke-width="1.5"/>
 <text x="1425" y="300" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" fill="#333333">Vanilla DQN</text>
-<text x="1425" y="318" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">81.7% viol. &#183; 91.7% acc.</text>
+<text x="1425" y="318" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="#555555">72.2% viol. &#183; 92.5% acc.</text>
 </svg>
